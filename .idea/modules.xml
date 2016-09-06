@@ -2,7 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../LSTM/.idea/LSTM.iml" filepath="$PROJECT_DIR$/../LSTM/.idea/LSTM.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../LSTMAttentionModel/.idea/LSTMAttentionModel.iml" filepath="$PROJECT_DIR$/../LSTMAttentionModel/.idea/LSTMAttentionModel.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/LanguageEvolutionFramework.iml" filepath="$PROJECT_DIR$/.idea/LanguageEvolutionFramework.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../ReinforcedFeedForwardNetwork/.idea/ReinforcedFeedForwardNetwork.iml" filepath="$PROJECT_DIR$/../ReinforcedFeedForwardNetwork/.idea/ReinforcedFeedForwardNetwork.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../VGG/.idea/VGG.iml" filepath="$PROJECT_DIR$/../VGG/.idea/VGG.iml" />
     </modules>
   </component>
 </project>

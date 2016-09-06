@@ -19,10 +19,8 @@ def main():
             break                   #   ... leave game loop
 
         # Update your game objects and data structures here...
-
         # We draw everything from scratch on each frame.
         # So first fill everything with the background color
-
         for i in np.arange(1000):
             main_surface.fill((255, 149, 0))
 
