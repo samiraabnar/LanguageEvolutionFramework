@@ -7,7 +7,7 @@ from scipy.spatial import distance
 import sys
 sys.path.append('../../')
 
-from ReinforcedFeedForwardNetwork.src.VGG_16 import *
+from LanguageEvolutionFramework.src.Vision.VGG_16 import *
 
 class ReinforcedFeedForwardNeuralNetwork_Listener(object):
     def __init__(self,dims):
@@ -123,11 +123,13 @@ def get_string(vec):
     return str
 
 if __name__ == '__main__':
-    rfnn_talker = ReinforcedFeedForwardNeuralNetwork_Talker([4096,512,2])
-    rfnn_talker.define_network()
+    rfnn_talker = AttendedLSTM(input_dim=5, output_dim=5, number_of_layers=1,
+                                   hidden_dims=[512], dropout_p=0.0, learning_rate=0.01) # ReinforcedFeedForwardNeuralNetwork_Talker([4096,512,2])
+    rfnn_talker.build_model()
 
-    rfnn_listener = ReinforcedFeedForwardNeuralNetwork_Listener([2, 4096*2, 4096])
-    rfnn_listener.define_network()
+    rfnn_listener = AttendedLSTM(input_dim=5, output_dim=1, number_of_layers=1,
+                                   hidden_dims=[512], dropout_p=0.0, learning_rate=0.01)#ReinforcedFeedForwardNeuralNetwork_Listener([2, 4096*2, 4096])
+    rfnn_listener.build_model()
 
 
     images,thumb_images = load_images_from_folder("shapes")
