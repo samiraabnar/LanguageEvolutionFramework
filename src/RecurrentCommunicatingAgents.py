@@ -15,7 +15,11 @@ class LSTM_Listener(object):
         self.output_dim = output_dim
         self.outer_output_dim = outer_output_dim
         self.learning_rate = 0.1
-
+        self.random_state = np.random.RandomState(23455)
+        self.initial_hiddens = [None,dict(initial=T.zeros(self.output_dim,dtype=theano.config.floatX)),
+                          dict(initial=T.zeros(self.output_dim,dtype=theano.config.floatX))
+                          , None, None, None
+                          ]
 
 
     def init_lstm_weights(self):
@@ -67,26 +71,19 @@ class LSTM_Listener(object):
                                      (self.output_dim, self.output_dim))
             , dtype=theano.config.floatX)
 
-        bias_input = np.zeros(self.output_dim, dtype=theano.config.floatX)
-        bias_forget = np.zeros(self.output_dim, dtype=theano.config.floatX)
-        bias_output = np.zeros(self.output_dim, dtype=theano.config.floatX)
-        bias = np.zeros(self.output_dim, dtype=theano.config.floatX)
 
-        self.W = theano.shared(value=W, name="W" + self.layer_id, borrow="True")
-        self.U = theano.shared(value=U, name="U" + self.layer_id, borrow="True")
-        self.bias = theano.shared(value=bias, name="bias", borrow="True")
 
-        self.W_input = theano.shared(value=W_input, name="W_input" + self.layer_id, borrow="True")
-        self.U_input = theano.shared(value=U_input, name="U_input" + self.layer_id, borrow="True")
-        self.bias_input = theano.shared(value=bias_input, name="bias_input" + self.layer_id, borrow="True")
+        self.W = theano.shared(value=W, name="W" , borrow="True")
+        self.U = theano.shared(value=U, name="U" , borrow="True")
 
-        self.W_output = theano.shared(value=W_output, name="W_output" + self.layer_id, borrow="True")
-        self.U_output = theano.shared(value=U_output, name="U_output" + self.layer_id, borrow="True")
-        self.bias_output = theano.shared(value=bias_output, name="bias_output" + self.layer_id, borrow="True")
+        self.W_input = theano.shared(value=W_input, name="W_input" , borrow="True")
+        self.U_input = theano.shared(value=U_input, name="U_input" , borrow="True")
 
-        self.W_forget = theano.shared(value=W_forget, name="W_forget" + self.layer_id, borrow="True")
-        self.U_forget = theano.shared(value=U_forget, name="U_forget" + self.layer_id, borrow="True")
-        self.bias_forget = theano.shared(value=bias_forget, name="bias_forget" + self.layer_id, borrow="True")
+        self.W_output = theano.shared(value=W_output, name="W_output" , borrow="True")
+        self.U_output = theano.shared(value=U_output, name="U_output" , borrow="True")
+
+        self.W_forget = theano.shared(value=W_forget, name="W_forget" , borrow="True")
+        self.U_forget = theano.shared(value=U_forget, name="U_forget" , borrow="True")
 
         O_w = np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
@@ -94,16 +91,16 @@ class LSTM_Listener(object):
                                      (self.outer_output_dim, self.output_dim))
             , dtype=theano.config.floatX)
 
-        O_bias = np.zeros(self.outer_output_dim, dtype=theano.config.floatX)
+        
 
-        self.O_w = theano.shared(value=O_w, name="O_w" + self.layer_id, borrow="True")
-        self.O_bias = theano.shared(value=O_bias, name="O_bias" + self.layer_id, borrow="True")
+        self.O_w = theano.shared(value=O_w, name="O_w" , borrow="True")
+       
 
         self.params = [self.U_input, self.U_forget, self.U_output, self.W_input, self.W_forget, self.W_output,
-                       self.bias_input, self.bias_forget, self.bias_output, self.U, self.W, self.bias,
+                        self.U, self.W
                        ]
 
-        self.output_params = [self.O_w, self.O_bias]
+        self.output_params = [self.O_w]
 
 
     def define_network(self):
@@ -113,19 +110,19 @@ class LSTM_Listener(object):
 
         self.init_lstm_weights()
 
-        def forward_step(x_t, prev_state, prev_content, prev_state_2, prev_content_2):
+        def forward_step(x_t, prev_state, prev_content):
             input_gate = T.nnet.hard_sigmoid(
-                T.dot((self.U_input), x_t) + T.dot(self.W_input, prev_state) + self.bias_input)
+                T.dot((self.U_input), x_t) + T.dot(self.W_input, prev_state))
             forget_gate = T.nnet.hard_sigmoid(
-                T.dot((self.U_forget), x_t) + T.dot(self.W_forget, prev_state) + self.bias_forget)
+                T.dot((self.U_forget), x_t) + T.dot(self.W_forget, prev_state))
             output_gate = T.nnet.hard_sigmoid(
-                T.dot((self.U_output), x_t) + T.dot(self.W_output, prev_state) + self.bias_output)
+                T.dot((self.U_output), x_t) + T.dot(self.W_output, prev_state) )
 
-            stabilized_input = T.tanh(T.dot((self.U), x_t) + T.dot(self.W, prev_state) + self.bias)
+            stabilized_input = T.tanh(T.dot((self.U), x_t) + T.dot(self.W, prev_state) )
             c = forget_gate * prev_content + input_gate * stabilized_input
             s = output_gate * T.tanh(c)
 
-            o = T.dot(self.O_w, s) + self.O_bias
+            o = T.dot(self.O_w, s)
 
             return [o, s, c, input_gate, forget_gate, output_gate]
 
@@ -134,7 +131,7 @@ class LSTM_Listener(object):
         [self.output,self.hidden_state,self.memory_content,self.input_gate, self.forget_gate,
          self.output_gate] , updates = theano.scan(
             forward_step,
-            sequences=[self.input],
+            sequences=[X],
             truncate_gradient=-1,
             outputs_info=self.initial_hiddens)
 
@@ -142,7 +139,7 @@ class LSTM_Listener(object):
 
         params = self.params + self.output_params
         cost = T.mean((self.output - Y) ** 2)
-        grads = T.grad(cost,)
+        grads = T.grad(cost,params)
         updates = [(param_i, param_i - self.learning_rate * grad_i) for param_i, grad_i in zip(params, grads)]
         self.backprop_update = theano.function([X,Y],[],updates=updates)
 
@@ -212,7 +209,7 @@ if __name__ == '__main__':
     #                               hidden_dims=[512], dropout_p=0.0, learning_rate=0.01) # ReinforcedFeedForwardNeuralNetwork_Talker([4096,512,2])
     #rfnn_talker.build_model()
 
-    lstm_listener = LSTM_Listener(input_dim=5, output_dim=4096*2, outer_output_dim=4096)#ReinforcedFeedForwardNeuralNetwork_Listener([2, 4096*2, 4096])
+    lstm_listener = LSTM_Listener(input_dim=5, output_dim=1000, outer_output_dim=4096)#ReinforcedFeedForwardNeuralNetwork_Listener([2, 4096*2, 4096])
     lstm_listener.define_network()
 
 
@@ -224,6 +221,10 @@ if __name__ == '__main__':
     for k in np.arange(5000):
         i = np.random.randint(2)#len(images))
         j = np.random.randint(2)#len(images))
+
+
+
+
 
         while j == i:
             j = np.random.randint(2)#len(images))

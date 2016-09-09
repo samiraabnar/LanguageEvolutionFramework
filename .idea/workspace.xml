@@ -20,6 +20,7 @@
   <component name="ChangesViewManager" flattened_view="true" show_ignored="false" />
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/LanguageEvolutionFramework$VGG_16.coverage" NAME="VGG-16 Coverage Results" MODIFIED="1472724641467" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../VGG/src" />
+    <SUITE FILE_PATH="coverage/LanguageEvolutionFramework$RecurrentCommunicatingAgents.coverage" NAME="RecurrentCommunicatingAgents Coverage Results" MODIFIED="1473422804003" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/LanguageEvolutionFramework$pg_pong.coverage" NAME="pg-pong Coverage Results" MODIFIED="1472804743428" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../ReinforcedFeedForwardNetwork/src" />
     <SUITE FILE_PATH="coverage/LanguageEvolutionFramework$GeometricGenerator.coverage" NAME="GeometricGenerator Coverage Results" MODIFIED="1472562794650" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/dataset" />
     <SUITE FILE_PATH="coverage/LanguageEvolutionFramework$QLearning.coverage" NAME="QLearning Coverage Results" MODIFIED="1472805884154" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../ReinforcedFeedForwardNetwork/src" />
@@ -35,25 +36,26 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="RecurrentCommunicatingAgents.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="RecurrentCommunicatingAgents.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/RecurrentCommunicatingAgents.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="659">
-              <caret line="131" column="31" selection-start-line="131" selection-start-column="31" selection-end-line="131" selection-end-column="31" />
+            <state relative-caret-position="584">
+              <caret line="97" column="0" selection-start-line="97" selection-start-column="0" selection-end-line="97" selection-end-column="0" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
+                <element signature="e#6391#7784#0" expanded="false" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="AttendedLSTMLayer.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/AttendedLSTMLayer.py">
+      <file leaf-file-name="VGG16.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/Vision/VGG16.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-870">
-              <caret line="24" column="0" selection-start-line="24" selection-start-column="0" selection-end-line="24" selection-end-column="0" />
+            <state relative-caret-position="735">
+              <caret line="55" column="27" selection-start-line="55" selection-start-column="4" selection-end-line="55" selection-end-column="27" />
               <folding>
-                <element signature="e#0#13#0" expanded="true" />
+                <element signature="e#0#35#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -62,8 +64,8 @@
       <file leaf-file-name="AttendedLSTM.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/AttendedLSTM.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="315">
-              <caret line="62" column="32" selection-start-line="62" selection-start-column="32" selection-end-line="62" selection-end-column="32" />
+            <state relative-caret-position="285">
+              <caret line="27" column="28" selection-start-line="27" selection-start-column="28" selection-end-line="27" selection-end-column="56" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -71,13 +73,13 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="FullyConnectedLSTM.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../LSTM/src/FullyConnectedLSTM.py">
+      <file leaf-file-name="AttendedLSTMLayer.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/AttendedLSTMLayer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2475">
-              <caret line="165" column="20" selection-start-line="165" selection-start-column="20" selection-end-line="165" selection-end-column="112" />
+            <state relative-caret-position="75">
+              <caret line="7" column="111" selection-start-line="7" selection-start-column="111" selection-end-line="12" selection-end-column="27" />
               <folding>
-                <element signature="e#0#28#0" expanded="true" />
+                <element signature="e#0#13#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -104,9 +106,10 @@
         <option value="$PROJECT_DIR$/../ReinforcedFeedForwardNetwork/src/pg-pong.py" />
         <option value="$PROJECT_DIR$/../ReinforcedFeedForwardNetwork/src/QLearning.py" />
         <option value="$PROJECT_DIR$/../ReinforcedFeedForwardNetwork/src/ReinforcedFeedForwardNeuralNetwork.py" />
-        <option value="$PROJECT_DIR$/src/RecurrentCommunicatingAgents.py" />
         <option value="$PROJECT_DIR$/src/AttendedLSTM.py" />
         <option value="$PROJECT_DIR$/src/AttendedLSTMLayer.py" />
+        <option value="$PROJECT_DIR$/src/Vision/VGG16.py" />
+        <option value="$PROJECT_DIR$/src/RecurrentCommunicatingAgents.py" />
       </list>
     </option>
   </component>
@@ -146,7 +149,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scratches" />
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -237,7 +240,7 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -246,33 +249,17 @@
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src" />
       <recent name="$PROJECT_DIR$/../VGG/src" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/shapes" />
       <recent name="$PROJECT_DIR$/src" />
       <recent name="$PROJECT_DIR$/../ReinforcedFeedForwardNetwork/src" />
       <recent name="$PROJECT_DIR$/../VGG/src/shapes" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.ReinforcedFeedForwardNeuralNetwork">
-    <configuration default="false" name="ReinforcedFeedForwardNetwork" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../ReinforcedFeedForwardNetwork/src" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="ReinforcedFeedForwardNetwork" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../ReinforcedFeedForwardNetwork/src/ReinforcedFeedForwardNetwork_tf.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <method />
-    </configuration>
+  <component name="RunManager" selected="Python.RecurrentCommunicatingAgents">
     <configuration default="false" name="VGG-16" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -341,6 +328,24 @@
       <module name="ReinforcedFeedForwardNetwork" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../ReinforcedFeedForwardNetwork/src/QLearning.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="RecurrentCommunicatingAgents" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="LanguageEvolutionFramework" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/RecurrentCommunicatingAgents.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <method />
@@ -554,19 +559,19 @@
       <method />
     </configuration>
     <list size="5">
-      <item index="0" class="java.lang.String" itemvalue="Python.ReinforcedFeedForwardNetwork" />
-      <item index="1" class="java.lang.String" itemvalue="Python.VGG-16" />
-      <item index="2" class="java.lang.String" itemvalue="Python.pg-pong" />
-      <item index="3" class="java.lang.String" itemvalue="Python.ReinforcedFeedForwardNeuralNetwork" />
-      <item index="4" class="java.lang.String" itemvalue="Python.QLearning" />
+      <item index="0" class="java.lang.String" itemvalue="Python.VGG-16" />
+      <item index="1" class="java.lang.String" itemvalue="Python.pg-pong" />
+      <item index="2" class="java.lang.String" itemvalue="Python.ReinforcedFeedForwardNeuralNetwork" />
+      <item index="3" class="java.lang.String" itemvalue="Python.QLearning" />
+      <item index="4" class="java.lang.String" itemvalue="Python.RecurrentCommunicatingAgents" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python.ReinforcedFeedForwardNeuralNetwork" />
-        <item index="1" class="java.lang.String" itemvalue="Python.QLearning" />
-        <item index="2" class="java.lang.String" itemvalue="Python.pg-pong" />
-        <item index="3" class="java.lang.String" itemvalue="Python.VGG-16" />
-        <item index="4" class="java.lang.String" itemvalue="Python.ReinforcedFeedForwardNetwork" />
+        <item index="0" class="java.lang.String" itemvalue="Python.RecurrentCommunicatingAgents" />
+        <item index="1" class="java.lang.String" itemvalue="Python.ReinforcedFeedForwardNeuralNetwork" />
+        <item index="2" class="java.lang.String" itemvalue="Python.QLearning" />
+        <item index="3" class="java.lang.String" itemvalue="Python.pg-pong" />
+        <item index="4" class="java.lang.String" itemvalue="Python.VGG-16" />
       </list>
     </recent_temporary>
   </component>
@@ -588,11 +593,11 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1920" height="977" extended-state="6" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25239617" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2603834" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3762712" sideWeight="0.515625" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3762712" sideWeight="0.52183175" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
@@ -603,7 +608,7 @@
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3768116" sideWeight="0.484375" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3762712" sideWeight="0.47816828" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -643,11 +648,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/dataset/image702.jpg">
-      <provider selected="true" editor-type-id="images">
-        <state />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/dataset/image685.jpg">
       <provider selected="true" editor-type-id="images">
         <state />
@@ -746,7 +746,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="120">
           <caret line="8" column="0" selection-start-line="8" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -755,9 +754,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="96">
           <caret line="48" column="35" selection-start-line="48" selection-start-column="29" selection-end-line="48" selection-end-column="35" />
-          <folding>
-            <element signature="e#0#13#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -765,19 +761,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-1509">
           <caret line="125" column="38" selection-start-line="125" selection-start-column="38" selection-end-line="125" selection-end-column="38" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../LSTM/src/FullyConnectedLSTM.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2475">
-          <caret line="165" column="20" selection-start-line="165" selection-start-column="20" selection-end-line="165" selection-end-column="112" />
-          <folding>
-            <element signature="e#0#28#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -797,20 +780,38 @@
     <entry file="file://$PROJECT_DIR$/../ReinforcedFeedForwardNetwork/src/shapes/image0.jpg" />
     <entry file="file://$PROJECT_DIR$/../ReinforcedFeedForwardNetwork/src/QLearning.py" />
     <entry file="file://$PROJECT_DIR$/../ReinforcedFeedForwardNetwork/src/ReinforcedFeedForwardNeuralNetwork.py" />
+    <entry file="file://$PROJECT_DIR$/../LSTM/src/FullyConnectedLSTM.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="494">
+          <caret line="165" column="20" selection-start-line="165" selection-start-column="20" selection-end-line="165" selection-end-column="112" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/RecurrentCommunicatingAgents.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="659">
-          <caret line="131" column="31" selection-start-line="131" selection-start-column="31" selection-end-line="131" selection-end-column="31" />
+        <state relative-caret-position="584">
+          <caret line="97" column="0" selection-start-line="97" selection-start-column="0" selection-end-line="97" selection-end-column="0" />
           <folding>
             <element signature="e#0#13#0" expanded="true" />
+            <element signature="e#6391#7784#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Vision/VGG16.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="735">
+          <caret line="55" column="27" selection-start-line="55" selection-start-column="4" selection-end-line="55" selection-end-column="27" />
+          <folding>
+            <element signature="e#0#35#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/AttendedLSTM.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
-          <caret line="62" column="32" selection-start-line="62" selection-start-column="32" selection-end-line="62" selection-end-column="32" />
+        <state relative-caret-position="285">
+          <caret line="27" column="28" selection-start-line="27" selection-start-column="28" selection-end-line="27" selection-end-column="56" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>
@@ -819,8 +820,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/AttendedLSTMLayer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-870">
-          <caret line="24" column="0" selection-start-line="24" selection-start-column="0" selection-end-line="24" selection-end-column="0" />
+        <state relative-caret-position="75">
+          <caret line="7" column="111" selection-start-line="7" selection-start-column="111" selection-end-line="12" selection-end-column="27" />
           <folding>
             <element signature="e#0#13#0" expanded="true" />
           </folding>

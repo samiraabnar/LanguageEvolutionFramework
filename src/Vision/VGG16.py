@@ -4,6 +4,8 @@ from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2
 from keras.optimizers import SGD
 import cv2, numpy as np
 
+import os
+
 def VGG_16(weights_path=None):
     model = Sequential()
     model.add(ZeroPadding2D((1,1),input_shape=(3,224,224)))
@@ -49,6 +51,27 @@ def VGG_16(weights_path=None):
         model.load_weights(weights_path)
 
     return model
+
+
+def load_images_from_folder(folder):
+    images = []
+    thumb_images = []
+    for filename in os.listdir(folder):
+        img = cv2.resize(cv2.imread(os.path.join(folder,filename)), (224, 224)).astype(np.float32)
+        img[:, :, 0] -= 103.939
+        img[:, :, 1] -= 116.779
+        img[:, :, 2] -= 123.68
+        img = img.transpose((2, 0, 1))
+        img = np.expand_dims(img, axis=0)
+        if img is not None:
+            images.append(img)
+
+        img2 = cv2.resize(cv2.imread(os.path.join(folder, filename)), (20, 20)).astype(np.float32)
+        thumb_images.append(img2)
+
+
+    return images, thumb_images
+
 
 if __name__ == "__main__":
     im = cv2.resize(cv2.imread('cat.jpg'), (224, 224)).astype(np.float32)
