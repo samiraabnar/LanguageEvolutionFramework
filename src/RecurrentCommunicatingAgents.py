@@ -3,18 +3,21 @@ import theano.tensor as T
 import numpy as np
 from scipy.spatial import distance
 import sklearn
+from theanolm.matrixfunctions import orthogonal_weight
 
 import sys
 sys.path.append('../../')
 
 from LanguageEvolutionFramework.src.Vision.VGG_16 import *
+from LanguageEvolutionFramework.src.CaptionGenerator import *
+
 
 class LSTM_Listener(object):
     def __init__(self,input_dim,output_dim,outer_output_dim):
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.outer_output_dim = outer_output_dim
-        self.learning_rate = 0.1
+        self.learning_rate = 0.05
         self.random_state = np.random.RandomState(23455)
         self.initial_hiddens = [None,dict(initial=T.zeros(self.output_dim,dtype=theano.config.floatX)),
                           dict(initial=T.zeros(self.output_dim,dtype=theano.config.floatX))
@@ -23,54 +26,62 @@ class LSTM_Listener(object):
 
 
     def init_lstm_weights(self):
-        U_input = np.asarray(
+        U_input = orthogonal_weight(self.output_dim, self.input_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.input_dim + self.output_dim)),
                                      np.sqrt(6.0 / (self.input_dim + self.output_dim)),
                                      (self.output_dim, self.input_dim))
             , dtype=theano.config.floatX)
-
-        U_forget = np.asarray(
+        """
+        U_forget = orthogonal_weight(self.output_dim, self.input_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.input_dim + self.output_dim)),
                                      np.sqrt(6.0 / (self.input_dim + self.output_dim)),
                                      (self.output_dim, self.input_dim))
             , dtype=theano.config.floatX)
-
-        U_output = np.asarray(
+        """
+        U_output = orthogonal_weight(self.output_dim, self.input_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.input_dim + self.output_dim)),
                                      np.sqrt(6.0 / (self.input_dim + self.output_dim)),
                                      (self.output_dim, self.input_dim))
             , dtype=theano.config.floatX)
-
-        W_input = np.asarray(
+        """
+        W_input = orthogonal_weight(self.output_dim, self.output_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      (self.output_dim, self.output_dim))
             , dtype=theano.config.floatX)
-
-        W_forget = np.asarray(
+        """
+        W_forget = orthogonal_weight(self.output_dim, self.output_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      (self.output_dim, self.output_dim))
             , dtype=theano.config.floatX)
-
-        W_output = np.asarray(
+        """
+        W_output = orthogonal_weight(self.output_dim, self.output_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      (self.output_dim, self.output_dim))
             , dtype=theano.config.floatX)
-
-        U = np.asarray(
+        """
+        U = orthogonal_weight(self.output_dim, self.input_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.input_dim + self.output_dim)),
                                      np.sqrt(6.0 / (self.input_dim + self.output_dim)),
                                      (self.output_dim, self.input_dim))
             , dtype=theano.config.floatX)
-
-        W = np.asarray(
+        """
+        W = orthogonal_weight(self.output_dim, self.output_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      (self.output_dim, self.output_dim))
             , dtype=theano.config.floatX)
-
+        """
 
 
         self.W = theano.shared(value=W, name="W" , borrow="True")
@@ -86,54 +97,63 @@ class LSTM_Listener(object):
         self.U_forget = theano.shared(value=U_forget, name="U_forget" , borrow="True")
 
 
-        U_input_2 = np.asarray(
+        U_input_2 = orthogonal_weight(self.output_dim, self.output_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      (self.output_dim, self.output_dim))
             , dtype=theano.config.floatX)
-
-        U_forget_2 = np.asarray(
+        """
+        U_forget_2 = orthogonal_weight(self.output_dim, self.output_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      (self.output_dim, self.output_dim))
             , dtype=theano.config.floatX)
-
-        U_output_2 = np.asarray(
+        """
+        U_output_2 = orthogonal_weight(self.output_dim, self.output_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      (self.output_dim, self.output_dim))
             , dtype=theano.config.floatX)
-
-        W_input_2 = np.asarray(
+        """
+        W_input_2 = orthogonal_weight(self.output_dim, self.output_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      (self.output_dim, self.output_dim))
             , dtype=theano.config.floatX)
-
-        W_forget_2 = np.asarray(
+        """
+        W_forget_2 = orthogonal_weight(self.output_dim, self.output_dim,scale=0.01)
+        """
+            np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      (self.output_dim, self.output_dim))
             , dtype=theano.config.floatX)
-
-        W_output_2 = np.asarray(
+        """
+        W_output_2 = orthogonal_weight(self.output_dim, self.output_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      (self.output_dim, self.output_dim))
             , dtype=theano.config.floatX)
-
-        U_2 = np.asarray(
+        """
+        U_2 = orthogonal_weight(self.output_dim, self.output_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.input_dim + self.output_dim)),
                                      np.sqrt(6.0 / (self.input_dim + self.output_dim)),
                                      (self.output_dim, self.output_dim))
             , dtype=theano.config.floatX)
-
-        W_2 = np.asarray(
+        """
+        W_2 = orthogonal_weight(self.output_dim, self.output_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      (self.output_dim, self.output_dim))
             , dtype=theano.config.floatX)
-
+        """
 
 
         self.W_2 = theano.shared(value=W_2, name="W_2" , borrow="True")
@@ -152,29 +172,18 @@ class LSTM_Listener(object):
 
 
 
-        O_w = np.asarray(
+        O_w = orthogonal_weight(self.outer_output_dim, self.output_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      np.sqrt(6.0 / (self.output_dim + self.output_dim)),
                                      (self.outer_output_dim, self.output_dim))
             , dtype=theano.config.floatX)
-
+        """
 
 
         self.O_w = theano.shared(value=O_w, name="O_w" , borrow="True")
 
-        W_in = np.asarray(
-            self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
-                                     np.sqrt(6.0 / (self.output_dim + self.output_dim)),
-                                     (4096, self.outer_output_dim))
-            , dtype=theano.config.floatX)
 
-        W_out = np.asarray(self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
-                                     np.sqrt(6.0 / (self.output_dim + self.output_dim)),
-                                     (4096, self.outer_output_dim))
-            , dtype=theano.config.floatX)
-
-        self.W_in = theano.shared(value=W_in, name="W_in" , borrow="True")
-        self.W_out = theano.shared(value=W_out, name="W_out", borrow="True")
 
         self.params = [self.U_input, self.U_forget, self.U_output, self.W_input, self.W_forget, self.W_output,
                        self.U, self.W,
@@ -183,7 +192,6 @@ class LSTM_Listener(object):
                        self.O_w
                        ]
 
-        self.output_params = [self.W_out]
 
 
     def define_network(self):
@@ -248,14 +256,16 @@ class LSTM_Listener(object):
 
 
 
-        output = T.mean(self.output,axis=0)#T.nnet.softmax(T.dot(self.W_out,T.sum(self.output.T,axis=1)))[0]
+        output = self.output[-1] #T.mean(self.output,axis=0)#T.nnet.softmax(T.dot(self.W_out,T.sum(self.output.T,axis=1)))[0]
         self.predict = theano.function([X],[output])
 
         params = self.params #+ self.output_params
-        cost = T.sum(T.nnet.categorical_crossentropy(output,Y))# T.sum(distance.euclidean(output,Y))  #
+        cost = T.sum(T.nnet.categorical_crossentropy(T.clip(output, 0.001, 0.999),Y))# T.sum(distance.euclidean(output,Y))  #
         grads = T.grad(cost,params)
         updates = [(param_i, param_i - self.learning_rate * grad_i) for param_i, grad_i in zip(params, grads)]
         self.backprop_update = theano.function([X,Y],[cost],updates=updates)
+
+
         p_updates = [(param_i, param_i + self.learning_rate * param_i + param_i*np.random.rand()) for param_i in params]
         self.positive_reinforcement = theano.function([],[],updates=p_updates)
         n_updates = [(param_i, param_i - self.learning_rate * param_i + param_i*np.random.rand()) for param_i in params]
@@ -264,147 +274,7 @@ class LSTM_Listener(object):
 
 
 
-class LSTM_Talker(object):
-    def __init__(self, input_dim, output_dim, outer_output_dim):
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.outer_output_dim = outer_output_dim
-        self.learning_rate = 0.03
-        self.random_state = np.random.RandomState(23455)
-        self.initial_hiddens = [None, dict(initial=T.zeros(self.output_dim, dtype=theano.config.floatX)),
-                                dict(initial=T.zeros(self.output_dim, dtype=theano.config.floatX))
-            , None, None, None
-                                ]
-
-    def init_lstm_weights(self):
-        U_input = np.asarray(
-            self.random_state.normal(-np.sqrt(6.0 / (self.input_dim + self.output_dim)),
-                                     np.sqrt(6.0 / (self.input_dim + self.output_dim)),
-                                     (self.output_dim, self.input_dim))
-            , dtype=theano.config.floatX)
-
-        U_forget = np.asarray(
-            self.random_state.normal(-np.sqrt(6.0 / (self.input_dim + self.output_dim)),
-                                     np.sqrt(6.0 / (self.input_dim + self.output_dim)),
-                                     (self.output_dim, self.input_dim))
-            , dtype=theano.config.floatX)
-
-        U_output = np.asarray(
-            self.random_state.normal(-np.sqrt(6.0 / (self.input_dim + self.output_dim)),
-                                     np.sqrt(6.0 / (self.input_dim + self.output_dim)),
-                                     (self.output_dim, self.input_dim))
-            , dtype=theano.config.floatX)
-
-        W_input = np.asarray(
-            self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
-                                     np.sqrt(6.0 / (self.output_dim + self.output_dim)),
-                                     (self.output_dim, self.output_dim))
-            , dtype=theano.config.floatX)
-
-        W_forget = np.asarray(
-            self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
-                                     np.sqrt(6.0 / (self.output_dim + self.output_dim)),
-                                     (self.output_dim, self.output_dim))
-            , dtype=theano.config.floatX)
-
-        W_output = np.asarray(
-            self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
-                                     np.sqrt(6.0 / (self.output_dim + self.output_dim)),
-                                     (self.output_dim, self.output_dim))
-            , dtype=theano.config.floatX)
-
-        U = np.asarray(
-            self.random_state.normal(-np.sqrt(6.0 / (self.input_dim + self.output_dim)),
-                                     np.sqrt(6.0 / (self.input_dim + self.output_dim)),
-                                     (self.output_dim, self.input_dim))
-            , dtype=theano.config.floatX)
-
-        W = np.asarray(
-            self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
-                                     np.sqrt(6.0 / (self.output_dim + self.output_dim)),
-                                     (self.output_dim, self.output_dim))
-            , dtype=theano.config.floatX)
-
-        self.W = theano.shared(value=W, name="W", borrow="True")
-        self.U = theano.shared(value=U, name="U", borrow="True")
-
-        self.W_input = theano.shared(value=W_input, name="W_input", borrow="True")
-        self.U_input = theano.shared(value=U_input, name="U_input", borrow="True")
-
-        self.W_output = theano.shared(value=W_output, name="W_output", borrow="True")
-        self.U_output = theano.shared(value=U_output, name="U_output", borrow="True")
-
-        self.W_forget = theano.shared(value=W_forget, name="W_forget", borrow="True")
-        self.U_forget = theano.shared(value=U_forget, name="U_forget", borrow="True")
-
-        O_w = np.asarray(
-            self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
-                                     np.sqrt(6.0 / (self.output_dim + self.output_dim)),
-                                     (self.outer_output_dim, self.output_dim))
-            , dtype=theano.config.floatX)
-
-        self.O_w = theano.shared(value=O_w, name="O_w", borrow="True")
-
-        W_in = np.asarray(
-            self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
-                                     np.sqrt(6.0 / (self.output_dim + self.output_dim)),
-                                     (4096, self.outer_output_dim))
-            , dtype=theano.config.floatX)
-
-        W_out = np.asarray(self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.output_dim)),
-                                                    np.sqrt(6.0 / (self.output_dim + self.output_dim)),
-                                                    (4096, self.outer_output_dim))
-                           , dtype=theano.config.floatX)
-
-        self.W_in = theano.shared(value=W_in, name="W_in", borrow="True")
-        self.W_out = theano.shared(value=W_out, name="W_out", borrow="True")
-
-        self.params = [self.U_input, self.U_forget, self.U_output, self.W_input, self.W_forget, self.W_output,
-                       self.U, self.W, self.W_out
-                       ]
-
-        self.output_params = [self.O_w]
-
-    def define_network(self):
-        X = T.matrix('input')
-        Y = T.vector('output')
-
-        self.init_lstm_weights()
-
-        def forward_step(x_t, prev_state, prev_content):
-            input_gate = T.nnet.hard_sigmoid(
-                T.dot((self.U_input), x_t) + T.dot(self.W_input, prev_state))
-            forget_gate = T.nnet.hard_sigmoid(
-                T.dot((self.U_forget), x_t) + T.dot(self.W_forget, prev_state))
-            output_gate = T.nnet.hard_sigmoid(
-                T.dot((self.U_output), x_t) + T.dot(self.W_output, prev_state))
-
-            stabilized_input = T.tanh(T.dot((self.U), x_t) + T.dot(self.W, prev_state))
-            c = forget_gate * prev_content + input_gate * stabilized_input
-            s = output_gate * T.tanh(c)
-
-            o = T.dot(self.O_w, s)
-
-            return [o, s, c, input_gate, forget_gate, output_gate]
-
-        [self.output, self.hidden_state, self.memory_content, self.input_gate, self.forget_gate,
-         self.output_gate], updates = theano.scan(
-            forward_step,
-            sequences=[input],
-            truncate_gradient=-1,
-            outputs_info=self.initial_hiddens)
-
-        output = T.dot(self.W_out, self.output.T)
-        self.predict = theano.function([X], [output])
-
-        params = self.params + self.output_params
-        cost = T.mean((output - Y) ** 2)
-        grads = T.grad(cost, params)
-        updates = [(param_i, param_i - self.learning_rate * grad_i) for param_i, grad_i in zip(params, grads)]
-        self.backprop_update = theano.function([X, Y], [], updates=updates)
-
-
-Alpha = ['A', 'B', 'C', 'D', 'E']
+Alpha = ['#','A', 'B', 'C', 'D', 'E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','$']
 def get_string(list_of_vec):
     str = " "
     for i in np.arange(len(list_of_vec)):
@@ -417,9 +287,8 @@ def softmax(x):
     return np.exp(x) / np.sum(np.exp(x), axis=0)
 
 if __name__ == '__main__':
-    #rfnn_talker = AttendedLSTM(input_dim=5, output_dim=5, number_of_layers=1,
-    #                               hidden_dims=[512], dropout_p=0.0, learning_rate=0.01) # ReinforcedFeedForwardNeuralNetwork_Talker([4096,512,2])
-    #rfnn_talker.build_model()
+    rfnn_talker = CaptionGenerator(input_dim=4096,hidden_dim=1000,output_dim=20)
+    rfnn_talker.define_network()
 
     lstm_listener = LSTM_Listener(input_dim=20, output_dim=1000, outer_output_dim=4096)#ReinforcedFeedForwardNeuralNetwork_Listener([2, 4096*2, 4096])
     lstm_listener.define_network()
@@ -450,31 +319,40 @@ if __name__ == '__main__':
         rep1 = softmax(vgg.get_representation(images[i])[0])
         rep2 = softmax(vgg.get_representation(images[j])[0])
 
+        image_embedding1 = rfnn_talker.image_reader.get_representation(images[i])[0]
+        image_embedding2 = rfnn_talker.image_reader.get_representation(images[j])[0]
 
-
-        d = np.zeros((2,20),dtype='float32')
+        """d = np.zeros((2,20),dtype='float32')
         d[0][i%2] = 1.0
         d[1][(i+1)%2] = 1.0
-
-
-        #description0 = rfnn_talker.forward_step(rep1)#[d]#
-        #description1 = description0[0]
-        #description = np.transpose(description1)
-        seq_embedding = lstm_listener.predict(d)
+        """
+        talker_input = np.repeat([image_embedding1],3,axis=0)
+        description0 = rfnn_talker.predict(talker_input)#[d]#
+        description1 = description0[0]
+        description1 = np.asarray([ np.eye(len(v))[np.argmax(v)] for v in description1],dtype="float32")
+        description = np.transpose(description1)
+        seq_embedding = lstm_listener.predict(description1)
 
         dist1 = dist_fun(np.asarray([rep1]),np.asarray(seq_embedding))     #distance.euclidean(rep1,seq_embedding)#
         dist2 = dist_fun(np.asarray([rep2]),np.asarray(seq_embedding))     #distance.euclidean(rep2,seq_embedding) #
 
-        selected = rep1
+        selected = image_embedding1
         state = "Succeed!"
         if dist2 < dist1:
-                selected = rep2
+                selected = image_embedding2
                 state = "Failed!"
 
+        [cost1] = lstm_listener.backprop_update(description1,rep1)
+        [cost2] = rfnn_talker.backprop_update_with_feedback(np.repeat([selected],description1.shape[1],axis=0),description1)
 
-
-        [cost1] = lstm_listener.backprop_update(d,rep1)
-        print(get_string(d)+" "+str(i))
+        #random_image_embedding = rfnn_talker.image_reader.get_representation(images[np.random.randint(len(images))])[0]
+        #input2 = np.repeat([random_image_embedding], 3, axis=0)
+        #random_sequence = rfnn_talker.predict(input2)
+        """ if(state == "Failed!"):
+            cost3 = rfnn_talker.backprop_update(np.repeat([image_embedding1],3,axis=0), description0[0])
+            print("make it faar ... ")
+        """
+        print(get_string(description1)+" "+str(i))
         print(str(cost1))
         print(state)
         #rfnn_talker.backprop_update(selected,np.round(description0[0][0]))

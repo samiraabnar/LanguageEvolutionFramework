@@ -57,19 +57,21 @@ class AttendedLSTM(object):
                                            input_dim=self.input_dim,
                                            output_dim=self.hidden_dims[0],
                                            outer_output_dim=self.output_dim,
-                                           random_state=self.random_state, layer_id="_0")
+                                           random_state=self.random_state, layer_id="_0",drop_rate=self.dropout_p)
 
 
         self.layers[1] = AttendedLSTMLayer(input=x,
                                            input_dim=self.input_dim,
-                                           output_dim=6,
+                                           output_dim=50,
                                            outer_output_dim=1,
-                                           random_state=self.random_state, layer_id="_0")
+                                           random_state=self.random_state, layer_id="_0",drop_rate=self.dropout_p)
 
 
-        self.averaged_output = \
-            T.dot(self.layers[1].output.T,self.layers[0].output) / T.sum(self.layers[1].output)
+        attention = self.layers[1].output / T.sum(self.layers[1].output)
+        self.averaged_output = T.dot(attention.T,self.layers[0].output)
         #T.mean(self.layers[0].output,axis=0)
+
+
 
 
         output =  self.averaged_output #T.nnet.softmax(self.O.dot(self.averaged_output))[0]
@@ -88,7 +90,7 @@ class AttendedLSTM(object):
         #cost = T.sum((T.sum(T.nnet.binary_crossentropy((self.layers[0].output + 0.0000001), y),
         #                    axis=1) / dists) )  # T.erf(error1) # T.erf(error1) + + L1 + L2
 
-        cost = T.sum(T.nnet.binary_crossentropy(output+0.0000001,y[-1])) + 0.0001*L2
+        cost = T.sum(T.nnet.binary_crossentropy(T.clip(output, 0.001, 0.999),y[-1])) + 0.00001*L2
         updates = LearningAlgorithms.adam(
             cost, params, lr=self.learning_rate
         )
@@ -100,14 +102,14 @@ class AttendedLSTM(object):
         self.get_visualization_values = theano.function([x],
                                                         [self.layers[0].output[-1], self.layers[0].hidden_state[-1]])
 
-    def train(self, X_train, y_train, X_dev, y_dev, nepoch=5):
+    def train(self, X_train, y_train, X_dev, y_dev, nepoch=100):
         # X_train = X_train[0:1]
         # y_train = y_train[0:1]
         for epoch in range(nepoch):
             grads = []
             # For each training example...
             iteration = 0
-            dropout = np.random.binomial(1, 1.0 - self.dropout_p, self.input_dim).astype(dtype=np.float32)
+            dropout = np.random.binomial(1, 1.0 - 0.25, self.input_dim).astype(dtype=np.float32)
             for i in np.random.permutation(len(X_train)):
                 # print("iteration "+str(iteration))
                 iteration += 1
@@ -132,9 +134,12 @@ class AttendedLSTM(object):
                 # print(cost)
 
             print("Accuracy on dev: ")
+            tmp =self.dropout_p
+            self.dropout_p = 0
             self.test_dev(X_dev, y_dev)
             print("Accuracy on train: ")
             self.test_dev(X_train, y_train)
+            self.dropout_p = tmp
 
     def test_dev(self, X_dev, y_dev):
         if len(y_dev[0]) > 1:
@@ -172,11 +177,11 @@ class AttendedLSTM(object):
         test = {}
         dev = {}
 
-        embedded_train, train_labels = WordEmbeddingLayer.load_embedded_data(path="../data/", name="train",
+        embedded_train, train_labels = WordEmbeddingLayer.load_embedded_data(path="/Users/iSam/Codes/LSTMAttentionModel/data/", name="train",
                                                                              representation="glove.840B.300d")
-        embedded_dev, dev_labels = WordEmbeddingLayer.load_embedded_data(path="../data/", name="dev",
-                                                                         representation="glove.840B.300d")
-        embedded_test, test_labels = WordEmbeddingLayer.load_embedded_data(path="../data/", name="test",
+        #embedded_dev, dev_labels = WordEmbeddingLayer.load_embedded_data(path="/Users/iSam/Codes/LSTMAttentionModel/data/", name="dev",
+        #                                                                 representation="glove.840B.300d")
+        embedded_test, test_labels = WordEmbeddingLayer.load_embedded_data(path="/Users/iSam/Codes/LSTMAttentionModel/data/", name="test",
                                                                            representation="glove.840B.300d")
 
         binary_embedded_train = []
@@ -201,7 +206,7 @@ class AttendedLSTM(object):
 
 
         flstm = AttendedLSTM(input_dim=len(embedded_train[0][0]), output_dim=2, number_of_layers=1,
-                                   hidden_dims=[hidden_dim], dropout_p=0.25, learning_rate=0.01)
+                                   hidden_dims=[hidden_dim], dropout_p=0.9, learning_rate=0.01)
         flstm.build_model()
 
         # train_labels[train_labels == 0] = -1
@@ -246,7 +251,7 @@ class AttendedLSTM(object):
 
 
         flstm = AttendedLSTM(input_dim=len(embedded_train[0][0]), output_dim=5, number_of_layers=1,
-                             hidden_dims=[hidden_dim], dropout_p=0.25, learning_rate=0.01)
+                             hidden_dims=[hidden_dim], dropout_p=0.75, learning_rate=0.01)
         flstm.build_model()
 
         # train_labels[train_labels == 0] = -1
@@ -698,4 +703,6 @@ class AttendedLSTM(object):
 
 if __name__ == '__main__':
     #AttendedLSTM.train_finegrained_glove_wordembedding(300, "finetest_model.txt")
-    AttendedLSTM.train_1layer_glove_wordembedding(300, "test_model_attended_300.txt")
+    model = "model_orthogonal_devide_attended_100-50-ProD09_inputdrop25.txt"
+    print(model)
+    AttendedLSTM.train_1layer_glove_wordembedding(100, model)

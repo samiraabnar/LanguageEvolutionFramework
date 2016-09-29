@@ -1,12 +1,15 @@
 import theano.tensor as T
 import theano
 import numpy as np
+from scipy.spatial import distance
+
 
 import sys
 
 sys.path.append('../../')
 
 from LanguageEvolutionFramework.src.Vision.VGG_16 import *
+from theanolm.matrixfunctions import orthogonal_weight
 
 
 class CaptionGenerator(object):
@@ -25,54 +28,62 @@ class CaptionGenerator(object):
 
 
     def init_lstm_weights(self):
-        U_input = np.asarray(
+        U_input = orthogonal_weight(self.hidden_dim, self.input_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.hidden_dim)),
                                      np.sqrt(6.0 / (self.output_dim + self.hidden_dim)),
                                      (self.hidden_dim, self.input_dim))
             , dtype=theano.config.floatX)
-
-        U_forget = np.asarray(
+        """
+        U_forget = orthogonal_weight(self.hidden_dim, self.input_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.hidden_dim)),
                                      np.sqrt(6.0 / (self.output_dim + self.hidden_dim)),
                                      (self.hidden_dim, self.input_dim))
             , dtype=theano.config.floatX)
-
-        U_output = np.asarray(
+        """
+        U_output = orthogonal_weight(self.hidden_dim, self.input_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.hidden_dim)),
                                      np.sqrt(6.0 / (self.output_dim + self.hidden_dim)),
                                      (self.hidden_dim, self.input_dim))
             , dtype=theano.config.floatX)
-
-        W_input = np.asarray(
+        """
+        W_input = orthogonal_weight(self.hidden_dim, self.hidden_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      (self.hidden_dim, self.hidden_dim))
             , dtype=theano.config.floatX)
-
-        W_forget = np.asarray(
+        """
+        W_forget = orthogonal_weight(self.hidden_dim, self.hidden_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      (self.hidden_dim, self.hidden_dim))
             , dtype=theano.config.floatX)
-
-        W_output = np.asarray(
+        """
+        W_output = orthogonal_weight(self.hidden_dim, self.hidden_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      (self.hidden_dim, self.hidden_dim))
             , dtype=theano.config.floatX)
-
-        U = np.asarray(
+        """
+        U = orthogonal_weight(self.hidden_dim, self.input_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.hidden_dim)),
                                      np.sqrt(6.0 / (self.output_dim + self.hidden_dim)),
-                                     (self.hidden_dim, self.input_dim))
+                                     (self.input_dim, self.input_dim))
             , dtype=theano.config.floatX)
-
-        W = np.asarray(
+        """
+        W = orthogonal_weight(self.hidden_dim, self.hidden_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      (self.hidden_dim, self.hidden_dim))
             , dtype=theano.config.floatX)
-
+        """
 
 
         self.W = theano.shared(value=W, name="W" , borrow="True")
@@ -88,54 +99,63 @@ class CaptionGenerator(object):
         self.U_forget = theano.shared(value=U_forget, name="U_forget" , borrow="True")
 
 
-        U_input_2 = np.asarray(
+        U_input_2 = orthogonal_weight(self.hidden_dim, self.hidden_dim)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      (self.hidden_dim, self.hidden_dim))
             , dtype=theano.config.floatX)
-
-        U_forget_2 = np.asarray(
+        """
+        U_forget_2 = orthogonal_weight(self.hidden_dim, self.hidden_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      (self.hidden_dim, self.hidden_dim))
             , dtype=theano.config.floatX)
-
-        U_output_2 = np.asarray(
+        """
+        U_output_2 = orthogonal_weight(self.hidden_dim, self.hidden_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      (self.hidden_dim, self.hidden_dim))
             , dtype=theano.config.floatX)
-
-        W_input_2 = np.asarray(
+        """
+        W_input_2 = orthogonal_weight(self.hidden_dim, self.hidden_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      (self.hidden_dim, self.hidden_dim))
             , dtype=theano.config.floatX)
-
-        W_forget_2 = np.asarray(
+        """
+        W_forget_2 = orthogonal_weight(self.hidden_dim, self.hidden_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      (self.hidden_dim, self.hidden_dim))
             , dtype=theano.config.floatX)
-
-        W_output_2 = np.asarray(
+        """
+        W_output_2 = orthogonal_weight(self.hidden_dim, self.hidden_dim,scale=0.01)
+        """
+            np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      (self.hidden_dim, self.hidden_dim))
             , dtype=theano.config.floatX)
-
-        U_2 = np.asarray(
+        """
+        U_2 = orthogonal_weight(self.hidden_dim, self.hidden_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      (self.hidden_dim, self.hidden_dim))
             , dtype=theano.config.floatX)
-
-        W_2 = np.asarray(
+        """
+        W_2 = orthogonal_weight(self.hidden_dim, self.hidden_dim,scale=0.01)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      np.sqrt(6.0 / (self.hidden_dim + self.hidden_dim)),
                                      (self.hidden_dim, self.hidden_dim))
             , dtype=theano.config.floatX)
-
+        """
 
 
         self.W_2 = theano.shared(value=W_2, name="W_2" , borrow="True")
@@ -154,12 +174,13 @@ class CaptionGenerator(object):
 
 
 
-        O_w = np.asarray(
+        O_w = orthogonal_weight(self.output_dim, self.hidden_dim)
+        """np.asarray(
             self.random_state.normal(-np.sqrt(6.0 / (self.output_dim + self.hidden_dim)),
                                      np.sqrt(6.0 / (self.output_dim + self.hidden_dim)),
                                      (self.output_dim, self.hidden_dim))
             , dtype=theano.config.floatX)
-
+        """
         self.O_w = theano.shared(value=O_w, name="O_w" , borrow="True")
 
         self.params = [self.U_input, self.U_forget, self.U_output, self.W_input, self.W_forget, self.W_output,
@@ -254,7 +275,7 @@ class CaptionGenerator(object):
 
             o = T.nnet.softmax(T.dot(self.O_w, s2))[0]
 
-            return [o, s, c, s2, c2, input_gate, forget_gate, output_gate]
+            return [o, s, c, s2, c2, input_gate, forget_gate, output_gate], theano.scan_module.until(T.eq(T.argmax(o),27))
 
         [self.output, self.hidden_state, self.memory_content, _, _, self.input_gate, self.forget_gate,
          self.output_gate], updates = theano.scan(
@@ -273,10 +294,14 @@ class CaptionGenerator(object):
         self.predict = theano.function([X],[output])
 
         params = self.params  # + self.output_params
-        cost = -T.sum(T.nnet.categorical_crossentropy(output, Y))  # T.sum(distance.euclidean(output,Y))  #
+        cost = 1 / T.sum(T.nnet.categorical_crossentropy(T.clip(output, 0.001, 0.999),Y))  #
         grads = T.grad(cost, params)
-        updates = [(param_i, param_i - self.learning_rate * grad_i) for param_i, grad_i in zip(params, grads)]
-        self.backprop_update = theano.function([X,Y], grads, updates=updates)
+        updates = [(param_i, param_i - self.learning_rate * cost * param_i + np.random.rand()) for param_i, grad_i in zip(params, grads)]
+        self.backprop_update = theano.function([X,Y], cost, updates=updates)
+        cost2 = T.sum(T.nnet.categorical_crossentropy(output,Y))
+        grads2 = T.grad(cost2,params)
+        feedback_updates = [(param_i, param_i - self.learning_rate * grad_i) for param_i, grad_i in zip(params, grads2)]
+        self.backprop_update_with_feedback = theano.function([X, Y], [cost2], updates=feedback_updates)
 
 
 
@@ -299,20 +324,23 @@ def get_string(list_of_vec):
 
 
 if __name__ == '__main__':
-    cp = CaptionGenerator(input_dim=4096,hidden_dim=1000,output_dim=20)
+    cp = CaptionGenerator(input_dim=4096,hidden_dim=1000,output_dim=27)
     cp.define_network()
 
     images, thumb_images = load_images_from_folder("shapes")
 
     for i in np.arange(10):
         image_embedding = cp.image_reader.get_representation(images[i])[0]
-        random_image_embedding = cp.image_reader.get_representation(images[np.random.randint(len(images))])[0]
+        j = np.random.randint(len(images))
+        while j == i:
+            j = np.random.randint(len(images))
+        random_image_embedding = cp.image_reader.get_representation(images[j])[0]
         input = np.repeat([image_embedding],3,axis=0)
         print(input.shape)
         sequence = cp.predict(input)
         input2 = np.repeat([random_image_embedding], 1, axis=0)
         random_sequence = cp.predict(input2)
+        print(str(i)+" "+str(j))
         print(get_string( np.ndarray.tolist(sequence[0])))
-        print()
-        cost = cp.backprop_update([image_embedding],random_sequence[0])
-        print(cost)
+        #cost = cp.backprop_update([image_embedding],random_sequence[0])
+        #print(cost)
