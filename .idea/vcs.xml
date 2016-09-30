@@ -3,5 +3,6 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$/../LSTM" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../LSTMAttentionModel" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../LSTMAttentionModel" vcs="Git" />
   </component>
 </project>

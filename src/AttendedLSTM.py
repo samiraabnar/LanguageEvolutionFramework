@@ -109,7 +109,7 @@ class AttendedLSTM(object):
             grads = []
             # For each training example...
             iteration = 0
-            dropout = np.random.binomial(1, 1.0 - 0.25, self.input_dim).astype(dtype=np.float32)
+            dropout = np.random.binomial(1, 1.0 - 0.2, self.input_dim).astype(dtype=np.float32)
             for i in np.random.permutation(len(X_train)):
                 # print("iteration "+str(iteration))
                 iteration += 1
@@ -136,10 +136,14 @@ class AttendedLSTM(object):
             print("Accuracy on dev: ")
             tmp =self.dropout_p
             self.dropout_p = 0
-            self.test_dev(X_dev, y_dev)
+            test_score = self.test_dev(X_dev, y_dev)
+            print(test_score)
             print("Accuracy on train: ")
-            self.test_dev(X_train, y_train)
+            print(self.test_dev(X_train, y_train))
             self.dropout_p = tmp
+
+            if(test_score >= 0.85):
+                self.save_model(str(test_score)+"_model.txt")
 
     def test_dev(self, X_dev, y_dev):
         if len(y_dev[0]) > 1:
@@ -169,7 +173,7 @@ class AttendedLSTM(object):
 
         accuracy = correct / len(X_dev)
 
-        print(accuracy)
+        return accuracy
 
     @staticmethod
     def train_1layer_glove_wordembedding(hidden_dim, modelfile):
@@ -206,7 +210,7 @@ class AttendedLSTM(object):
 
 
         flstm = AttendedLSTM(input_dim=len(embedded_train[0][0]), output_dim=2, number_of_layers=1,
-                                   hidden_dims=[hidden_dim], dropout_p=0.9, learning_rate=0.01)
+                                   hidden_dims=[hidden_dim], dropout_p=0.9, learning_rate=0.003)
         flstm.build_model()
 
         # train_labels[train_labels == 0] = -1
@@ -703,6 +707,6 @@ class AttendedLSTM(object):
 
 if __name__ == '__main__':
     #AttendedLSTM.train_finegrained_glove_wordembedding(300, "finetest_model.txt")
-    model = "model_orthogonal_devide_attended_100-50-ProD09_inputdrop25.txt"
+    model = "model_orthogonal_devide_attended_50-50-ProD09_inputdrop02_lr003.txt"
     print(model)
-    AttendedLSTM.train_1layer_glove_wordembedding(100, model)
+    AttendedLSTM.train_1layer_glove_wordembedding(50, model)

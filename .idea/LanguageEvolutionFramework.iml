@@ -8,5 +8,6 @@
     <orderEntry type="module" module-name="VGG" />
     <orderEntry type="module" module-name="LSTMAttentionModel" />
     <orderEntry type="module" module-name="LSTM" />
+    <orderEntry type="module" module-name="LSTMAttentionModel" />
   </component>
 </module>
