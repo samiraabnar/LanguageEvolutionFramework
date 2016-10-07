@@ -13,8 +13,8 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/LanguageEvolutionFramework$CaptionGenerator.coverage" NAME="CaptionGenerator Coverage Results" MODIFIED="1475157322668" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
-    <SUITE FILE_PATH="coverage/LanguageEvolutionFramework$RecurrentCommunicatingAgents.coverage" NAME="RecurrentCommunicatingAgents Coverage Results" MODIFIED="1475235833539" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/LanguageEvolutionFramework$CaptionGenerator.coverage" NAME="CaptionGenerator Coverage Results" MODIFIED="1475851895870" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/LanguageEvolutionFramework$RecurrentCommunicatingAgents.coverage" NAME="RecurrentCommunicatingAgents Coverage Results" MODIFIED="1475589998699" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/LanguageEvolutionFramework$AttendedLSTM.coverage" NAME="AttendedLSTM Coverage Results" MODIFIED="1475234128588" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/LanguageEvolutionFramework$pg_pong.coverage" NAME="pg-pong Coverage Results" MODIFIED="1472804743428" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../ReinforcedFeedForwardNetwork/src" />
     <SUITE FILE_PATH="coverage/LanguageEvolutionFramework$ReinforcedFeedForwardNeuralNetwork.coverage" NAME="ReinforcedFeedForwardNeuralNetwork Coverage Results" MODIFIED="1473112507282" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../ReinforcedFeedForwardNetwork/src" />
@@ -35,8 +35,8 @@
       <file leaf-file-name="RecurrentCommunicatingAgents.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/RecurrentCommunicatingAgents.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="17">
-              <caret line="334" column="0" selection-start-line="334" selection-start-column="0" selection-end-line="334" selection-end-column="0" />
+            <state relative-caret-position="122">
+              <caret line="326" column="11" selection-start-line="326" selection-start-column="11" selection-end-line="328" selection-end-column="27" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
@@ -44,52 +44,13 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="CaptionGenerator.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="CaptionGenerator.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/CaptionGenerator.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="45">
-              <caret line="277" column="106" selection-start-line="277" selection-start-column="106" selection-end-line="277" selection-end-column="106" />
+            <state relative-caret-position="404">
+              <caret line="351" column="22" selection-start-line="351" selection-start-column="22" selection-end-line="351" selection-end-column="22" />
               <folding>
                 <element signature="e#0#25#0" expanded="true" />
-                <marker date="1475157320000" expanded="true" signature="282:14903" ph="..." />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="AttendedLSTM.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/AttendedLSTM.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="227">
-              <caret line="700" column="26" selection-start-line="700" selection-start-column="26" selection-end-line="700" selection-end-column="26" />
-              <folding>
-                <element signature="e#0#18#0" expanded="true" />
-                <element signature="e#8055#8189#0" expanded="false" />
-                <element signature="e#9511#9549#0" expanded="false" />
-                <element signature="e#9832#13184#0" expanded="false" />
-                <element signature="e#13232#13541#0" expanded="false" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="FullyConnectedLSTM.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../LSTM/src/FullyConnectedLSTM.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="494">
-              <caret line="165" column="20" selection-start-line="165" selection-start-column="20" selection-end-line="165" selection-end-column="112" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="LSTMLayer.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../LSTM/src/LSTMLayer.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="60">
-              <caret line="45" column="39" selection-start-line="45" selection-start-column="39" selection-end-line="45" selection-end-column="64" />
-              <folding>
-                <element signature="e#0#13#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -120,9 +81,9 @@
         <option value="$PROJECT_DIR$/src/Vision/VGG16.py" />
         <option value="$PROJECT_DIR$/../LSTM/src/FullyConnectedLSTM2.py" />
         <option value="$PROJECT_DIR$/../LSTMAttentionModel/src/AttendedLSTMLayer.py" />
-        <option value="$PROJECT_DIR$/src/CaptionGenerator.py" />
-        <option value="$PROJECT_DIR$/src/RecurrentCommunicatingAgents.py" />
         <option value="$PROJECT_DIR$/src/AttendedLSTM.py" />
+        <option value="$PROJECT_DIR$/src/RecurrentCommunicatingAgents.py" />
+        <option value="$PROJECT_DIR$/src/CaptionGenerator.py" />
       </list>
     </option>
   </component>
@@ -133,7 +94,7 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="91" />
+    <option name="x" value="3" />
     <option name="y" value="23" />
     <option name="width" value="1920" />
     <option name="height" value="977" />
@@ -220,7 +181,7 @@
       <recent name="$PROJECT_DIR$/../VGG/src" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.RecurrentCommunicatingAgents">
+  <component name="RunManager" selected="Python.CaptionGenerator">
     <configuration default="false" name="ReinforcedFeedForwardNeuralNetwork" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -528,9 +489,9 @@
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python.RecurrentCommunicatingAgents" />
-        <item index="1" class="java.lang.String" itemvalue="Python.AttendedLSTM" />
-        <item index="2" class="java.lang.String" itemvalue="Python.CaptionGenerator" />
+        <item index="0" class="java.lang.String" itemvalue="Python.CaptionGenerator" />
+        <item index="1" class="java.lang.String" itemvalue="Python.RecurrentCommunicatingAgents" />
+        <item index="2" class="java.lang.String" itemvalue="Python.AttendedLSTM" />
         <item index="3" class="java.lang.String" itemvalue="Python.ReinforcedFeedForwardNeuralNetwork" />
         <item index="4" class="java.lang.String" itemvalue="Python.QLearning" />
       </list>
@@ -553,8 +514,8 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="91" y="23" width="1920" height="977" extended-state="0" />
-    <editor active="false" />
+    <frame x="3" y="23" width="1920" height="977" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2657082" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -563,7 +524,7 @@
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3762712" sideWeight="0.4547391" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3762712" sideWeight="0.4547391" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -612,7 +573,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/RecurrentCommunicatingAgents.py</url>
-          <line>332</line>
+          <line>334</line>
           <option name="timeStamp" value="9" />
         </line-breakpoint>
       </breakpoints>
@@ -791,37 +752,36 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/CaptionGenerator.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="45">
-          <caret line="277" column="106" selection-start-line="277" selection-start-column="106" selection-end-line="277" selection-end-column="106" />
-          <folding>
-            <element signature="e#0#25#0" expanded="true" />
-            <marker date="1475157320000" expanded="true" signature="282:14903" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/RecurrentCommunicatingAgents.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="334" column="0" selection-start-line="334" selection-start-column="0" selection-end-line="334" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#13#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/AttendedLSTM.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="227">
-          <caret line="700" column="26" selection-start-line="700" selection-start-column="26" selection-end-line="700" selection-end-column="26" />
+        <state relative-caret-position="2640">
+          <caret line="178" column="8" selection-start-line="178" selection-start-column="8" selection-end-line="178" selection-end-column="8" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
             <element signature="e#8055#8189#0" expanded="false" />
             <element signature="e#9511#9549#0" expanded="false" />
             <element signature="e#9832#13184#0" expanded="false" />
             <element signature="e#13232#13541#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RecurrentCommunicatingAgents.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="122">
+          <caret line="326" column="11" selection-start-line="326" selection-start-column="11" selection-end-line="328" selection-end-column="27" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/CaptionGenerator.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="404">
+          <caret line="351" column="22" selection-start-line="351" selection-start-column="22" selection-end-line="351" selection-end-column="22" />
+          <folding>
+            <element signature="e#0#25#0" expanded="true" />
           </folding>
         </state>
       </provider>

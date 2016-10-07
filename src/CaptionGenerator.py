@@ -18,7 +18,7 @@ class CaptionGenerator(object):
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.output_dim = output_dim
-        self.learning_rate = 0.1
+        self.learning_rate = 0.01
         self.random_state = np.random.RandomState(23455)
 
         self.EmptyLetter = np.asarray(np.eye(output_dim)[0],dtype='float32')
@@ -298,7 +298,7 @@ class CaptionGenerator(object):
         grads = T.grad(cost, params)
         updates = [(param_i, param_i - self.learning_rate * cost * param_i + np.random.rand()) for param_i, grad_i in zip(params, grads)]
         self.backprop_update = theano.function([X,Y], cost, updates=updates)
-        cost2 = T.sum(T.nnet.categorical_crossentropy(output,Y))
+        cost2 = T.sum(T.nnet.categorical_crossentropy(T.clip(output, 0.001, 0.999),Y))
         grads2 = T.grad(cost2,params)
         feedback_updates = [(param_i, param_i - self.learning_rate * grad_i) for param_i, grad_i in zip(params, grads2)]
         self.backprop_update_with_feedback = theano.function([X, Y], [cost2], updates=feedback_updates)
@@ -329,7 +329,8 @@ if __name__ == '__main__':
 
     images, thumb_images = load_images_from_folder("shapes")
 
-    for i in np.arange(10):
+    for k in np.arange(1000):
+        i = np.random.randint(5)
         image_embedding = cp.image_reader.get_representation(images[i])[0]
         j = np.random.randint(len(images))
         while j == i:
@@ -338,9 +339,16 @@ if __name__ == '__main__':
         input = np.repeat([image_embedding],3,axis=0)
         print(input.shape)
         sequence = cp.predict(input)
+        print(sequence[0].shape)
         input2 = np.repeat([random_image_embedding], 1, axis=0)
         random_sequence = cp.predict(input2)
         print(str(i)+" "+str(j))
         print(get_string( np.ndarray.tolist(sequence[0])))
-        #cost = cp.backprop_update([image_embedding],random_sequence[0])
+
+        d = np.zeros((3, 27), dtype='float32')
+        d[0][1 + i % 25] = 1.0
+        d[1][1 + (i + 1) % 25] = 1.0
+        d[2][1 + (i + 2) % 25] = 1.0
+        print(d.shape)
+        cost = cp.backprop_update_with_feedback([image_embedding],sequence)
         #print(cost)
