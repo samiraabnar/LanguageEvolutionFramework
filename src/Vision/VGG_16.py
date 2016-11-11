@@ -83,6 +83,8 @@ class VGG_16(object):
         l31 = MaxPooling2D((2,2), strides=(2,2))
         model.add(l31)
 
+        model.summary()
+
         l32 = Flatten()
         model.add(l32)
         l33 = Dense(4096, activation='relu')
@@ -91,6 +93,8 @@ class VGG_16(object):
         model.add(Dense(4096, activation='relu'))
         model.add(Dropout(0.5))
         model.add(Dense(1000, activation='softmax'))
+
+        model.summary()
 
         self.get_representation = theano.function([l1.input], l33.output,
                                           allow_input_downcast=True)
@@ -158,6 +162,7 @@ if __name__ == "__main__":
 
     # Test pretrained model
     vgg = VGG_16('vgg16_weights.h5')
+
     sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
     vgg.model.compile(optimizer=sgd, loss='categorical_crossentropy')
     out = vgg.model.predict(im)

@@ -26,18 +26,21 @@ def main():
 
             # Overpaint a smaller rectangle on the main surface
             #main_surface.fill(some_color, small_rect)
-            for j in np.arange(np.random.random_integers(2)):
-                some_color = (np.random.random_integers(255), np.random.random_integers(255), np.random.random_integers(255))
-                some_shape = [np.random.random_integers(255), np.random.random_integers(255), np.random.random_integers(255), np.random.random_integers(255)]
-                pygame.draw.rect(main_surface, some_color, some_shape)
+            k = 0;
 
-            for j in np.arange(np.random.random_integers(2)):
-            # Draw an ellipse outline, using a rectangle as the outside boundaries
-                some_color = (np.random.random_integers(255), np.random.random_integers(255), np.random.random_integers(255))
-                some_shape = [np.random.random_integers(255), np.random.random_integers(255), np.random.random_integers(255), np.random.random_integers(255)]
+            for j in np.arange(np.random.randint(2)):
+                some_color = (1*np.random.random_integers(100,255), 0*np.random.random_integers(255), 0*np.random.random_integers(255))
+                some_shape = [np.random.random_integers(50,255), np.random.random_integers(50,255), np.random.random_integers(50,255), np.random.random_integers(50,255)]
+                pygame.draw.rect(main_surface, some_color, some_shape)
+                k = 1
+
+            if k == 0:
+                # Draw an ellipse outline, using a rectangle as the outside boundaries
+                some_color = (0*np.random.random_integers(255), 0*np.random.random_integers(255),1*np.random.random_integers(100,255))
+                some_shape = [np.random.random_integers(50,255), np.random.random_integers(50,255), np.random.random_integers(50,55), np.random.random_integers(50,255)]
                 pygame.draw.ellipse(main_surface, some_color, some_shape, 0)
 
-            pygame.image.save(main_surface,"image"+str(i)+".jpg")
+            pygame.image.save(main_surface,"../single_shapes/test/image"+str(i)+".jpg")
 
         # Now the surface is ready, tell pygame to display it!
         pygame.display.flip()
