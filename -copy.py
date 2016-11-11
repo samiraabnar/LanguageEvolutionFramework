@@ -14,8 +14,7 @@ from LanguageEvolutionFramework.src.CaptionGenerator_backprop import *
 
 
 class LSTM_Listener(object):
-    def __init__(self,image_dim,input_dim,output_dim,outer_output_dim):
-        self.image_dim = image_dim
+    def __init__(self,input_dim,output_dim,outer_output_dim):
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.outer_output_dim = outer_output_dim
@@ -97,15 +96,13 @@ class LSTM_Listener(object):
 
         self.O_w = theano.shared(value=O_w, name="O_w" , borrow="True")
 
-        I_e = orthogonal_weight(self.outer_output_dim, self.image_dim, scale=0.01)
 
-        self.I_e = theano.shared(value=I_e, name="I_e", borrow="True")
 
         self.params = [self.U_input, self.U_forget, self.U_output, self.W_input, self.W_forget, self.W_output,
                        self.U, self.W,
                        self.U_input_2, self.U_forget_2, self.U_output_2, self.W_input_2, self.W_forget_2, self.W_output_2,
                        self.U_2, self.W_2,
-                       self.O_w, self.I_e
+                       self.O_w
                        ]
 
 
@@ -144,7 +141,7 @@ class LSTM_Listener(object):
 
 
 
-            o = T.dot(self.O_w, s2)
+            o = T.nnet.softmax(T.dot(self.O_w, s2))[0]
 
             return [o, s, c, s2, c2, input_gate, forget_gate, output_gate]
 
@@ -172,8 +169,7 @@ class LSTM_Listener(object):
 
 
 
-        output = T.nnet.softmax(T.dot(self.I_e,self.output[-1]))[0] #T.nnet.softmax(T.dot(self.W_out,T.sum(self.output.T,axis=1)))[0]
-
+        output = self.output[-1] #T.nnet.softmax(T.dot(self.W_out,T.sum(self.output.T,axis=1)))[0]
         self.predict = theano.function([X],[output])
 
         params = self.params #+ self.output_params
@@ -206,22 +202,11 @@ def softmax(x):
     """Compute softmax values for each sets of scores in x."""
     return np.exp(x) / np.sum(np.exp(x), axis=0)
 
-
-# this computes the probabilities of each element in the set
-def prob(values):
-    return [ v / sum(values) for v in values]
-
-# this computes the entropy
-def entropy(values):
-    p = prob(values)
-    return -sum([v*np.log(v) for v in p])
-
-
 if __name__ == '__main__':
-    rfnn_talker = CaptionGenerator(image_dim=4096,input_dim=2000,hidden_dim=2000,output_dim=28)
+    rfnn_talker = CaptionGenerator(image_dim=4096,input_dim=4096,hidden_dim=1000,output_dim=28)
     rfnn_talker.define_network()
 
-    lstm_listener = LSTM_Listener(input_dim=28, output_dim=2000, outer_output_dim=4096,image_dim=4096)#ReinforcedFeedForwardNeuralNetwork_Listener([2, 4096*2, 4096])
+    lstm_listener = LSTM_Listener(input_dim=28, output_dim=1000, outer_output_dim=4096)#ReinforcedFeedForwardNeuralNetwork_Listener([2, 4096*2, 4096])
     lstm_listener.define_network()
 
 
@@ -238,7 +223,7 @@ if __name__ == '__main__':
 
     for k in np.arange(1000):
         i = np.random.randint(2)#len(images))
-        j = np.random.randint(2)*10#len(images))
+        j = np.random.randint(2)#len(images))
 
 
 
@@ -258,43 +243,18 @@ if __name__ == '__main__':
         d[0][i%2] = 1.0
         d[1][(i+1)%2] = 1.0
         """
-        while True:
-            description0 = rfnn_talker.predict(image_embedding1)#[d]#
-            description1 = description0[0]
-            description1 = np.asarray([ np.eye(len(v))[np.argmax(v)] for v in description1],dtype="float32")
-            description = np.transpose(description1)
-
-            description20 = rfnn_talker.predict(image_embedding2)  # [d]#
-            description21 = description20[0]
-            description21 = np.asarray([np.eye(len(v))[np.argmax(v)] for v in description21], dtype="float32")
-            description2 = np.transpose(description21)
-
-            print(get_string(description1) + " " + get_string(description21))
-
-            if (description == description2).all():
-                ent1 = sum([ entropy(prob(d))for d in description])
-                ent2 = sum([entropy(prob(d)) for d in description2])
-                e = np.eye(28)
-
-                if(ent2 > ent1):
-                    random_sequence1 = [e[np.random.randint(1,26)] for i in np.arange(description2.shape[0])]
-                    while (random_sequence1 == description2):
-                        random_sequence1 = [e[np.random.randint(1, 26)] for i in np.arange(description2.shape[0])]
-
-                    [cost2] = rfnn_talker.backprop_update_with_feedback(image_embedding2,
-                                                                        np.asarray(random_sequence1, 'float32'))
-                else:
-                    random_sequence2 = [e[np.random.randint(1,26)] for i in np.arange(description.shape[0])]
-                    while (random_sequence2 == description):
-                        random_sequence2 = [e[np.random.randint(1, 26)] for i in np.arange(description.shape[0])]
-
-                    [cost2] = rfnn_talker.backprop_update_with_feedback(image_embedding1,
-                                                                        np.asarray(random_sequence2, 'float32'))
-                continue
-            else:
-                break
-
+        description0 = rfnn_talker.predict(image_embedding1)#[d]#
+        description1 = description0[0]
+        description1 = np.asarray([ np.eye(len(v))[np.argmax(v)] for v in description1],dtype="float32")
+        description = np.transpose(description1)
         seq_embedding = lstm_listener.predict(description1)
+
+        description20 = rfnn_talker.predict(image_embedding2)  # [d]#
+        description21 = description20[0]
+        description21 = np.asarray([np.eye(len(v))[np.argmax(v)] for v in description21], dtype="float32")
+        description2 = np.transpose(description21)
+
+
 
         dist1 = dist_fun(np.asarray([rep1]),np.asarray(seq_embedding))     #distance.euclidean(rep1,seq_embedding)#
         dist2 = dist_fun(np.asarray([rep2]),np.asarray(seq_embedding))     #distance.euclidean(rep2,seq_embedding) #
@@ -309,26 +269,32 @@ if __name__ == '__main__':
         #print(dist1)
         #print(dist2)
 
+        e = np.eye(28)
+        random_sequence =  np.argmax(np.random.randn(*description1.shape), axis=1)
+        random_sequence = [ e[r] for r in random_sequence]
 
-        p = 0.9
+        p = 0.5
+
         rnd = np.random.rand()
 
        # [cost3] = lstm_listener.backprop_update(description21, rep2)
         if  state == "Succeed!":
             [cost2] = rfnn_talker.backprop_update_with_feedback(selected,description1)
-            [cost1] = lstm_listener.backprop_update(description1, selected)
+            [cost1] = lstm_listener.backprop_update(description1, rep1)
 
-        """    else:
+        else:
             if dist1 == dist2:
-                [cost1] = lstm_listener.backprop_update(description1, rep1)
+                [cost1] = lstm_listener.backprop_update(description1, rep2)
                 if rnd < p:
                     [cost2] = rfnn_talker.backprop_update_with_feedback(image_embedding1, np.asarray(random_sequence,'float32'))
             else:
-                [cost1] = lstm_listener.backprop_update(description1, rep1)
-                #if rnd < p:
-                #    [cost2] = rfnn_talker.backprop_update_with_feedback(image_embedding1, np.asarray(random_sequence,'float32'))
+
+                [cost1] = lstm_listener.backprop_update(description1, rep2)
+
+                if rnd < p:
+                    [cost2] = rfnn_talker.backprop_update_with_feedback(image_embedding1, np.asarray(random_sequence,'float32'))
                 [cost2] = rfnn_talker.backprop_update_with_feedback(selected, description1)
-        """
+
         #random_image_embedding = rfnn_talker.image_reader.get_representation(images[np.random.randint(len(images))])[0]
         #input2 = np.repeat([random_image_embedding], 3, axis=0)
         #random_sequence = rfnn_talker.predict(input2)
