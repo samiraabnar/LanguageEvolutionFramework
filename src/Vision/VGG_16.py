@@ -92,12 +92,15 @@ class VGG_16(object):
         model.add(Dropout(0.5))
         model.add(Dense(4096, activation='relu'))
         model.add(Dropout(0.5))
-        model.add(Dense(1000, activation='softmax'))
+        l34 = Dense(1000, activation='softmax')
+        model.add(l34)
 
         model.summary()
 
         self.get_representation = theano.function([l1.input], l33.output,
                                           allow_input_downcast=True)
+
+        #self.get_representation2 = theano.function([model.input], model.output)
 
         if weights_path:
             model.load_weights(weights_path)
@@ -161,7 +164,7 @@ if __name__ == "__main__":
     im = np.expand_dims(im, axis=0)
 
     # Test pretrained model
-    vgg = VGG_16('vgg16_weights.h5')
+    vgg = VGG_16('../vgg16_weights.h5')
 
     sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
     vgg.model.compile(optimizer=sgd, loss='categorical_crossentropy')

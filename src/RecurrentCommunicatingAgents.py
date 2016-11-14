@@ -225,10 +225,13 @@ if __name__ == '__main__':
     lstm_listener.define_network()
 
 
-    images,thumb_images = load_images_from_folder("shapes")
+
+
+    #Training Phase
+    print("Training")
+    images,thumb_images = load_images_from_folder("single_shapes/train/")
     vgg = VGG_16('vgg16_weights.h5')
     vgg.model.compile(optimizer='adam', loss='categorical_crossentropy')
-
 
     y = T.matrix()
     o = T.matrix()
@@ -237,15 +240,15 @@ if __name__ == '__main__':
 
 
     for k in np.arange(1000):
-        i = np.random.randint(2)#len(images))
-        j = np.random.randint(2)*10#len(images))
+        i = np.random.randint(len(images))
+        j = np.random.randint(len(images))
 
 
 
 
 
         while j == i:
-            j = np.random.randint(2)#len(images))
+            j = np.random.randint(len(images))
 
         rep1 = softmax(vgg.get_representation(images[i])[0])
         rep2 = softmax(vgg.get_representation(images[j])[0])
@@ -269,27 +272,27 @@ if __name__ == '__main__':
             description21 = np.asarray([np.eye(len(v))[np.argmax(v)] for v in description21], dtype="float32")
             description2 = np.transpose(description21)
 
-            print(get_string(description1) + " " + get_string(description21))
+            #print(get_string(description1) + " " + get_string(description21))
 
-            if (description == description2).all():
+            if (description1 == description21).all():
                 ent1 = sum([ entropy(prob(d))for d in description])
                 ent2 = sum([entropy(prob(d)) for d in description2])
                 e = np.eye(28)
 
                 if(ent2 > ent1):
-                    random_sequence1 = [e[np.random.randint(1,26)] for i in np.arange(description2.shape[0])]
-                    while (random_sequence1 == description2):
-                        random_sequence1 = [e[np.random.randint(1, 26)] for i in np.arange(description2.shape[0])]
+                    random_sequence1 = np.asarray([e[np.random.randint(1,26)] for i in np.arange(description21.shape[0])])
+                    while (random_sequence1 == description1):
+                        random_sequence1 = np.asarray([e[np.random.randint(1, 26)] for i in np.arange(description21.shape[0])])
 
                     [cost2] = rfnn_talker.backprop_update_with_feedback(image_embedding2,
-                                                                        np.asarray(random_sequence1, 'float32'))
+                                                                        np.asarray(np.transpose(random_sequence1), 'float32'))
                 else:
-                    random_sequence2 = [e[np.random.randint(1,26)] for i in np.arange(description.shape[0])]
-                    while (random_sequence2 == description):
-                        random_sequence2 = [e[np.random.randint(1, 26)] for i in np.arange(description.shape[0])]
+                    random_sequence2 = np.asarray([e[np.random.randint(1,26)] for i in np.arange(description1.shape[0])])
+                    while (random_sequence2 == description21):
+                        random_sequence2 = [e[np.random.randint(1, 26)] for i in np.arange(description1.shape[0])]
 
                     [cost2] = rfnn_talker.backprop_update_with_feedback(image_embedding1,
-                                                                        np.asarray(random_sequence2, 'float32'))
+                                                                        np.asarray(np.transpose(random_sequence2), 'float32'))
                 continue
             else:
                 break
@@ -305,37 +308,13 @@ if __name__ == '__main__':
                 selected = image_embedding2
                 state = "Failed!"
 
-        print(state)
-        #print(dist1)
-        #print(dist2)
 
-
-        p = 0.9
-        rnd = np.random.rand()
-
-       # [cost3] = lstm_listener.backprop_update(description21, rep2)
         if  state == "Succeed!":
             [cost2] = rfnn_talker.backprop_update_with_feedback(selected,description1)
             [cost1] = lstm_listener.backprop_update(description1, selected)
 
-        """    else:
-            if dist1 == dist2:
-                [cost1] = lstm_listener.backprop_update(description1, rep1)
-                if rnd < p:
-                    [cost2] = rfnn_talker.backprop_update_with_feedback(image_embedding1, np.asarray(random_sequence,'float32'))
-            else:
-                [cost1] = lstm_listener.backprop_update(description1, rep1)
-                #if rnd < p:
-                #    [cost2] = rfnn_talker.backprop_update_with_feedback(image_embedding1, np.asarray(random_sequence,'float32'))
-                [cost2] = rfnn_talker.backprop_update_with_feedback(selected, description1)
-        """
-        #random_image_embedding = rfnn_talker.image_reader.get_representation(images[np.random.randint(len(images))])[0]
-        #input2 = np.repeat([random_image_embedding], 3, axis=0)
-        #random_sequence = rfnn_talker.predict(input2)
 
-        print(get_string(description1)+" "+str(i))
-        #print("cost2: "+str(cost2))
+        print(">> "+get_string(description1)+" "+get_string(description2)+" "+str(i)+" "+str(j)+" "+state)
 
-        #rfnn_talker.backprop_update(selected,np.round(description0[0][0]))
 
 
