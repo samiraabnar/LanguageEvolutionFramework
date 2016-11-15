@@ -272,9 +272,7 @@ if __name__ == '__main__':
             description21 = np.asarray([np.eye(len(v))[np.argmax(v)] for v in description21], dtype="float32")
             description2 = np.transpose(description21)
 
-            #print(get_string(description1) + " " + get_string(description21))
-
-            if (description1 == description21).all():
+            if (get_string(description1) == get_string(description21)):
                 ent1 = sum([ entropy(prob(d))for d in description])
                 ent2 = sum([entropy(prob(d)) for d in description2])
                 e = np.eye(28)
@@ -288,7 +286,7 @@ if __name__ == '__main__':
                                                                         np.asarray(np.transpose(random_sequence1), 'float32'))
                 else:
                     random_sequence2 = np.asarray([e[np.random.randint(1,26)] for i in np.arange(description1.shape[0])])
-                    while (random_sequence2 == description21):
+                    while (get_string(random_sequence2) == get_string(description21)):
                         random_sequence2 = [e[np.random.randint(1, 26)] for i in np.arange(description1.shape[0])]
 
                     [cost2] = rfnn_talker.backprop_update_with_feedback(image_embedding1,
@@ -314,7 +312,63 @@ if __name__ == '__main__':
             [cost1] = lstm_listener.backprop_update(description1, selected)
 
 
-        print(">> "+get_string(description1)+" "+get_string(description2)+" "+str(i)+" "+str(j)+" "+state)
+        print(">> "+get_string(description1)+" "+get_string(description21)+" "+str(i)+" "+str(j)+" "+state)
 
+    print("Testing...")
+    images, thumb_images = load_images_from_folder("single_shapes/test/")
+
+
+    for k in np.arange(1000):
+        i = np.random.randint(len(images))
+        j = np.random.randint(len(images))
+
+        while j == i:
+            j = np.random.randint(len(images))
+
+        rep1 = softmax(vgg.get_representation(images[i])[0])
+        rep2 = softmax(vgg.get_representation(images[j])[0])
+
+
+        image_embedding1 = rfnn_talker.image_reader.get_representation(images[i])[0]
+        image_embedding2 = rfnn_talker.image_reader.get_representation(images[j])[0]
+
+        while j == i:
+            j = np.random.randint(len(images))
+
+        rep1 = softmax(vgg.get_representation(images[i])[0])
+        rep2 = softmax(vgg.get_representation(images[j])[0])
+
+        image_embedding1 = rfnn_talker.image_reader.get_representation(images[i])[0]
+        image_embedding2 = rfnn_talker.image_reader.get_representation(images[j])[0]
+
+        """d = np.zeros((2,20),dtype='float32')
+        d[0][i%2] = 1.0
+        d[1][(i+1)%2] = 1.0
+        """
+
+        description0 = rfnn_talker.predict(image_embedding1)  # [d]#
+        description1 = description0[0]
+        description1 = np.asarray([np.eye(len(v))[np.argmax(v)] for v in description1], dtype="float32")
+        description = np.transpose(description1)
+
+        description20 = rfnn_talker.predict(image_embedding2)  # [d]#
+        description21 = description20[0]
+        description21 = np.asarray([np.eye(len(v))[np.argmax(v)] for v in description21], dtype="float32")
+        description2 = np.transpose(description21)
+
+
+        seq_embedding = lstm_listener.predict(description1)
+
+        dist1 = dist_fun(np.asarray([rep1]), np.asarray(seq_embedding))  # distance.euclidean(rep1,seq_embedding)#
+        dist2 = dist_fun(np.asarray([rep2]), np.asarray(seq_embedding))  # distance.euclidean(rep2,seq_embedding) #
+
+        selected = image_embedding1
+        state = "Succeed!"
+        if dist2 <= dist1:
+            selected = image_embedding2
+            state = "Failed!"
+
+        print(">> " + get_string(description1) + " " + get_string(description21) + " " + str(i) + " " + str(
+            j) + " " + state)
 
 
