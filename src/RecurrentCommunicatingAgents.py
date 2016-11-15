@@ -283,14 +283,14 @@ if __name__ == '__main__':
                         random_sequence1 = np.asarray([e[np.random.randint(1, 26)] for i in np.arange(description21.shape[0])])
 
                     [cost2] = rfnn_talker.backprop_update_with_feedback(image_embedding2,
-                                                                        np.asarray(np.transpose(random_sequence1), 'float32'))
+                                                                        np.asarray((random_sequence1), 'float32'))
                 else:
                     random_sequence2 = np.asarray([e[np.random.randint(1,26)] for i in np.arange(description1.shape[0])])
                     while (get_string(random_sequence2) == get_string(description21)):
                         random_sequence2 = [e[np.random.randint(1, 26)] for i in np.arange(description1.shape[0])]
 
                     [cost2] = rfnn_talker.backprop_update_with_feedback(image_embedding1,
-                                                                        np.asarray(np.transpose(random_sequence2), 'float32'))
+                                                                        np.asarray((random_sequence2), 'float32'))
                 continue
             else:
                 break
