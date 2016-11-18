@@ -278,16 +278,16 @@ if __name__ == '__main__':
                 e = np.eye(28)
 
                 if(ent2 > ent1):
-                    random_sequence1 = np.asarray([e[np.random.randint(1,26)] for i in np.arange(np.random.randint(10))])
-                    while (random_sequence1 == description1):
-                        random_sequence1 = np.asarray([e[np.random.randint(1, 26)] for i in np.arange(np.random.randint(10))])
+                    random_sequence1 = np.asarray([e[np.random.randint(1,26)] for i in np.arange(np.max(description1.shape[0],np.random.randint(10)))])
+                    while (get_string(random_sequence1) == get_string(description1)):
+                        random_sequence1 = np.asarray([e[np.random.randint(1, 26)] for i in np.arange(np.max(description1.shape[0],np.random.randint(10)))])
 
                     [cost2] = rfnn_talker.backprop_update_with_feedback(image_embedding2,
                                                                         np.asarray((random_sequence1), 'float32'))
                 else:
-                    random_sequence2 = np.asarray([e[np.random.randint(1,26)] for i in np.arange(np.random.randint(10))])
+                    random_sequence2 = np.asarray([e[np.random.randint(1,26)] for i in np.arange(np.max(description1.shape[0],np.random.randint(10)))])
                     while (get_string(random_sequence2) == get_string(description21)):
-                        random_sequence2 = [e[np.random.randint(1, 26)] for i in np.arange(np.random.randint(10))]
+                        random_sequence2 = [e[np.random.randint(1, 26)] for i in np.arange(np.max(description1.shape[0],np.random.randint(10)))]
 
                     [cost2] = rfnn_talker.backprop_update_with_feedback(image_embedding1,
                                                                         np.asarray((random_sequence2), 'float32'))
