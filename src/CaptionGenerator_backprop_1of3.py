@@ -265,7 +265,7 @@ def get_string(list_of_vec):
 
 
 if __name__ == '__main__':
-    cp = CaptionGenerator(image_dim=4096*3,input_dim=4096*3,hidden_dim=1000,output_dim=28)
+    cp = CaptionGenerator(image_dim=1000*3,input_dim=1000*3,hidden_dim=1000,output_dim=28)
     cp.define_network()
 
     images, thumb_images = load_images_from_folder("shapes")
@@ -276,7 +276,7 @@ if __name__ == '__main__':
     start = time.time()
     for k in np.arange(1000):
         i = np.random.randint(5)
-        image_embedding = cp.image_reader.get_representation(images[i])[0]
+        image_embedding = cp.image_reader.model.predict(images[i])[0]
         j = np.random.randint(len(images))
         while j == i:
             j = np.random.randint(len(images))
@@ -285,10 +285,11 @@ if __name__ == '__main__':
         while (k==i) or (k==j):
             k = np.random.randint(len(images))
 
-        random_image_embedding_1 = cp.image_reader.get_representation(images[j])[0]
-        random_image_embedding_2 = cp.image_reader.get_representation(images[k])[0]
+        random_image_embedding_1 = cp.image_reader.model.predict(images[j])[0]
+        random_image_embedding_2 = cp.image_reader.model.predict(images[k])[0]
 
-        input = np.asarray([image_embedding,random_image_embedding_1,random_image_embedding_2],3,axis=0)
+
+        input = np.concatenate(np.asarray(image_embedding,random_image_embedding_1,random_image_embedding_2),axis=0)
 
         sequence = cp.predict(image_embedding)
         input2 = np.repeat([random_image_embedding], 1, axis=0)

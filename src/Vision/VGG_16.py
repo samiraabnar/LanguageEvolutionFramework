@@ -82,9 +82,6 @@ class VGG_16(object):
         model.add(l30)
         l31 = MaxPooling2D((2,2), strides=(2,2))
         model.add(l31)
-
-        model.summary()
-
         l32 = Flatten()
         model.add(l32)
         l33 = Dense(4096, activation='relu')
@@ -100,7 +97,6 @@ class VGG_16(object):
         self.get_representation = theano.function([l1.input], l33.output,
                                           allow_input_downcast=True)
 
-        #self.get_representation2 = theano.function([model.input], model.output)
 
         if weights_path:
             model.load_weights(weights_path)
