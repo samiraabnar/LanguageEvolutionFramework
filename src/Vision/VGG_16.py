@@ -108,9 +108,6 @@ def load_images_from_folder(folder):
     thumb_images = []
     for filename in os.listdir(folder):
         img = cv2.resize(cv2.imread(os.path.join(folder,filename)), (224, 224)).astype(np.float32)
-        img[:, :, 0] -= 103.939
-        img[:, :, 1] -= 116.779
-        img[:, :, 2] -= 123.68
         img = img.transpose((2, 0, 1))
         img = np.expand_dims(img, axis=0)
         if img is not None:

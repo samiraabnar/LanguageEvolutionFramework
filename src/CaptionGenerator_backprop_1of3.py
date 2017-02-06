@@ -289,12 +289,9 @@ if __name__ == '__main__':
         random_image_embedding_2 = cp.image_reader.model.predict(images[k])[0]
 
 
-        input = np.concatenate(np.asarray(image_embedding,random_image_embedding_1,random_image_embedding_2),axis=0)
+        input = np.concatenate(np.asarray([image_embedding,random_image_embedding_1,random_image_embedding_2]),axis=0)
 
-        sequence = cp.predict(image_embedding)
-        input2 = np.repeat([random_image_embedding], 1, axis=0)
-        random_sequence = cp.predict(random_image_embedding)
-        print(str(i)+" "+str(j))
+        sequence = cp.predict(input)
         print(get_string( np.ndarray.tolist(sequence[0])))
 
         d = np.zeros((np.max([3,sequence[0].shape[0]]), 28), dtype='float32')
@@ -305,8 +302,6 @@ if __name__ == '__main__':
             d[i][27] = 1.0
 
         print(get_string(d))
-        cost = cp.backprop_update_with_feedback(image_embedding,d)
-        print(cost)
 
     end = time.time()
     print ("total time: "+str(end - start))
