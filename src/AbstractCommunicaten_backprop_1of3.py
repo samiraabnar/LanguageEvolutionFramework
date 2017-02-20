@@ -67,7 +67,7 @@ if __name__ == '__main__':
                 [talker_raw_sequence] = lstm_talker.predict(np.asarray(items[k],dtype="float32"))
 
 
-                if talker_raw_sequence[-1] != dg.labels[-1]:
+                if np.argmax(talker_raw_sequence[-1]) != np.argmax(dg.labels[0][-1]):
                     talker_raw_sequence = np.concatenate((talker_raw_sequence,dg.labels[-1]),axis=0)
                 talker_onehot_sequence = np.asarray(get_probabilistic_sequence(talker_raw_sequence,np.argmax(dg.labels[0][-1])),dtype="float32")
 

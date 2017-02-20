@@ -47,15 +47,15 @@ class DataSetGenerator(object):
         concat_concept_values_all_combinations_indexes = list(itertools.product(np.arange(self.number_of_values_per_independent_concept), repeat=self.number_of_independent_concepts))
         for concat_concept_value_indexes in concat_concept_values_all_combinations_indexes:
             combined_concept_value = [independent_concepts_values[k][concat_concept_value_indexes[k]] for k in np.arange(self.number_of_independent_concepts)]
-            combined_concept_value_label = [independent_concept_value_labels[k][concat_concept_value_indexes[k]] for k in np.arange(self.number_of_independent_concepts)]
-
+            combined_concept_value_label = [independent_concept_value_labels[k*self.number_of_values_per_independent_concept+concat_concept_value_indexes[k]] for k in np.arange(self.number_of_independent_concepts)]
+            combined_concept_value_label.append(independent_concept_value_labels[-1])
 
             concated_combined_concept_value = np.concatenate(tuple(combined_concept_value), axis=0)
-            concated_combined_concept_value_label = np.concatenate(tuple(combined_concept_value_label), axis=0)
+            #concated_combined_concept_value_label = np.concatenate(tuple(combined_concept_value_label), axis=0)
 
 
             concat_concept_values_all_combinations.append(concated_combined_concept_value)
-            concat_concept_values_all_combinations_labels.append(concated_combined_concept_value_label)
+            concat_concept_values_all_combinations_labels.append(combined_concept_value_label)
 
 
 
@@ -114,7 +114,7 @@ class DataSetGenerator(object):
 
                 remove_indexes = np.where(remained_items[:,sorted_index[sorted_index_index]] != 1)
                 remained_items = remained_items[np.delete(np.arange(len(remained_items)),remove_indexes) ]
-                selected_concepts_value_indexes.append(sorted_index[0] % self.number_of_values_per_independent_concept)
+                selected_concepts_value_indexes.append(sorted_index[0] // self.number_of_values_per_independent_concept)
 
 
             combined_item_label = []

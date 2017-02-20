@@ -15,7 +15,7 @@ class ListernerLSTM(object):
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.output_dim = output_dim
-        self.learning_rate = 0.001
+        self.learning_rate = 0.01
         self.dropout_rate = dropout_rate
         self.input_dropout_rate = input_dropout_rate
         self.random_state = np.random.RandomState(23455)
@@ -179,7 +179,7 @@ class ListernerLSTM(object):
         self.predict = theano.function([X],[output])
 
         params = self.params #+ self.output_params
-        cost = T.sum(T.nnet.categorical_crossentropy(output,Y))# T.sum(distance.euclidean(output,Y))  #
+        cost = T.sum(distance.euclidean(output,Y)) #T.sum(T.nnet.categorical_crossentropy(output,Y))# T.sum(distance.euclidean(output,Y))  #
         updates =  adam(cost,params,learning_rate=0.0001) #apply_momentum(updates_sgd, params, momentum=0.9)
         self.backprop_update = theano.function([X,Y],[output,cost],updates=updates)
         self.get_output_without_update = theano.function([X, Y], [output, cost])
@@ -200,14 +200,23 @@ if __name__ == '__main__':
     number_of_items_per_combination = 2
     label_dim = number_of_concepts * number_of_values_per_concept + 1
     dg = DataSetGenerator(number_of_concepts, number_of_values_per_concept)
-    dg.generate_data_with_marginal_labels(number_of_items_per_label=number_of_items_per_combination, core_item=0)
-    items = dg.combined_items
-    labels = dg.combined_labels
+    #dg.generate_data_with_marginal_labels(number_of_items_per_label=number_of_items_per_combination, core_item=0)
+    dg.generate_data()
+    items = dg.items
+    labels = dg.labels
 
-    lstm_listener = ListernerLSTM(input_dim =number_of_concepts * number_of_values_per_concept * number_of_items_per_combination + label_dim,
+    total_count = len(items)
+    test_count = (total_count // 5)
+
+    train_items = items[:-test_count]
+    test_items = items[-test_count:]
+    train_labels = labels[:-test_count]
+    test_labels = labels[-test_count:]
+
+    lstm_listener = ListernerLSTM(input_dim = label_dim,
                                   hidden_dim = 128,
-                                  output_dim = number_of_items_per_combination,
-                                  dropout_rate=0.5,
+                                  output_dim = number_of_values_per_concept*number_of_concepts,
+                                  dropout_rate=0.0,
                                   input_dropout_rate=0
                                   )
     lstm_listener.define_network()
@@ -218,8 +227,11 @@ if __name__ == '__main__':
     start = time.time()
     number_of_epochs = 1000
     for e in np.arange(number_of_epochs):
-        for k in np.arange(len(items)):
-            item = []
+        train_items_index = np.arange(len(train_labels))
+        np.random.shuffle(train_items_index)
+        train_cost = []
+        for k in train_items_index:
+            """item = []
             shuffled_index = []
             for s in np.arange(number_of_items_per_combination):
                 item.append(items[k][s*(number_of_values_per_concept*number_of_concepts):(s+1)*(number_of_values_per_concept*number_of_concepts)])
@@ -231,14 +243,32 @@ if __name__ == '__main__':
                 shuffled_item.append(item[i])
 
             target_label = np.eye(number_of_items_per_combination,dtype="float32")[shuffled_index.index(0)]
+            """
 
+            input_items = train_labels[k] #np.concatenate(tuple(shuffled_item),axis=0)
+            #input_items = [np.concatenate((input_items,word),axis=0) for word in labels[k]]
 
-            input_items = np.concatenate(tuple(shuffled_item),axis=0)
-            input_items = [np.concatenate((input_items,word),axis=0) for word in labels[k]]
+            target_label = train_items[k] / sum(train_items[k])
 
-            cost,output = lstm_listener.backprop_update(np.asarray(input_items,dtype="float32"),target_label)
-            print(str(e*len(items)+k)+": "+str(shuffled_index.index(0) == np.argmax(output)))
+            output, cost = lstm_listener.backprop_update(np.asarray(input_items,dtype="float32"),np.asarray(target_label,dtype="float32"))
 
+            train_cost.append(cost)
+            #print(str(e*len(items)+k)+": "+str(shuffled_index.index(0) == np.argmax(output)))
 
+        print("train_cost: " + str(np.mean(train_cost)))
+        test_items_index =  np.arange(len(test_items))
+        costs = []
+        for k in test_items_index:
+            input_items = test_labels[k]  # np.concatenate(tuple(shuffled_item),axis=0)
+            # input_items = [np.concatenate((input_items,word),axis=0) for word in labels[k]]
+
+            target_label = test_items[k] / sum(test_items[k])
+
+            output, cost = lstm_listener.backprop_update(np.asarray(input_items, dtype="float32"),
+                                                         np.asarray(target_label, dtype="float32"))
+
+            costs.append(cost)
+
+        print("test_cost: "+str(np.mean(cost)))
 
 
