@@ -16,7 +16,7 @@ class ListernerLSTM(object):
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.output_dim = output_dim
-        self.learning_rate = 0.01
+        self.learning_rate = 0.001
         self.dropout_rate = dropout_rate
         self.input_dropout_rate = input_dropout_rate
         self.random_state = np.random.RandomState(23455)
@@ -109,6 +109,7 @@ class ListernerLSTM(object):
 
         X = T.matrix('input')
         Y = T.vector('output')
+        all_targets = T.matrix("targets")
 
         #H = T.vector('init_state')
 
@@ -175,15 +176,16 @@ class ListernerLSTM(object):
 
 
 
-        output = T.nnet.softmax(self.output[-1])[0] #T.nnet.softmax(T.dot(self.W_out,T.sum(self.output.T,axis=1)))[0]
+        output = T.nnet.hard_sigmoid (self.output[-1]) #T.nnet.softmax(T.dot(self.W_out,T.sum(self.output.T,axis=1)))[0]
 
         self.predict = theano.function([X],[output])
 
         params = self.params #+ self.output_params
-        cost = T.sum(distance.euclidean(output,Y)) #T.sum(T.nnet.categorical_crossentropy(output,Y))# T.sum(distance.euclidean(output,Y))  #
+        cost = T.sum(abs(output - Y)) # T.sum(T.sum(4 - T.sum(abs(output - all_targets),axis=1)))
+
+
         updates =  adam(cost,params,learning_rate=0.0001) #apply_momentum(updates_sgd, params, momentum=0.9)
         self.backprop_update = theano.function([X,Y],[output,cost],updates=updates)
-        self.get_output_without_update = theano.function([X, Y], [output, cost])
 
 
 
@@ -226,12 +228,17 @@ if __name__ == '__main__':
     import random
 
     start = time.time()
-    number_of_epochs = 1000
+    number_of_epochs = 3000
     for e in np.arange(number_of_epochs):
         train_items_index = np.arange(len(train_labels))
         np.random.shuffle(train_items_index)
         train_cost = []
         for k in train_items_index:
+            all_other_index= list(train_items_index[:])
+            all_other_index.remove(k)
+            all_other_index = np.asarray(all_other_index)
+
+            all_other_items = np.asarray(train_items,"float32")[all_other_index,:]
             """item = []
             shuffled_index = []
             for s in np.arange(number_of_items_per_combination):
@@ -249,11 +256,18 @@ if __name__ == '__main__':
             input_items = train_labels[k] #np.concatenate(tuple(shuffled_item),axis=0)
             #input_items = [np.concatenate((input_items,word),axis=0) for word in labels[k]]
 
-            target_label = train_items[k] / sum(train_items[k])
+            target_label = train_items[k]
 
-            output, cost = lstm_listener.backprop_update(np.asarray(input_items,dtype="float32"),np.asarray(target_label,dtype="float32"))
+            output, cost = lstm_listener.backprop_update(np.asarray(input_items,dtype="float32"),
+                                                         np.asarray(target_label,dtype="float32")
+                                                         #, all_other_items
+                                                         )
 
             train_cost.append(cost)
+
+            print(target_label)
+            print(output)
+
             #print(str(e*len(items)+k)+": "+str(shuffled_index.index(0) == np.argmax(output)))
 
         print("train_cost: " + str(np.mean(train_cost)))
@@ -263,13 +277,17 @@ if __name__ == '__main__':
             input_items = test_labels[k]  # np.concatenate(tuple(shuffled_item),axis=0)
             # input_items = [np.concatenate((input_items,word),axis=0) for word in labels[k]]
 
-            target_label = test_items[k] / sum(test_items[k])
+            target_label = test_items[k]
 
-            output, cost = lstm_listener.backprop_update(np.asarray(input_items, dtype="float32"),
-                                                         np.asarray(target_label, dtype="float32"))
+            output = lstm_listener.predict(np.asarray(input_items, dtype="float32")
+                                                         #np.asarray(target_label, dtype="float32"),
+                                                )
 
-            costs.append(cost)
+            #costs.append(cost)
+            print(target_label)
+            print(output)
+            print("********************")
 
-        print("test_cost: "+str(np.mean(cost)))
+        #print("test_cost: "+str(np.mean(cost)))
 
 
