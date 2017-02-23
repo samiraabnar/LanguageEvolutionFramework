@@ -12,6 +12,7 @@ from lasagne.updates import sgd, apply_momentum
 import theano.tensor.shared_randomstreams
 
 from generate_data import *
+from Util import *
 
 class TalkerLSTM(object):
     def __init__(self,
@@ -110,17 +111,15 @@ self.random_state.randint(999999))
 
 
 
-        O_w_mean = random_normal_matrix((self.output_dim, self.lstm_hidden_dim))
-        self.O_w_mean = theano.shared(value=O_w_mean, name="O_w_mean" , borrow="True")
+        O_w = random_normal_matrix((self.output_dim, self.lstm_hidden_dim))
+        self.O_w = theano.shared(value=O_w, name="O_w" , borrow="True")
 
-        O_w_sdv = random_normal_matrix((self.output_dim, self.lstm_hidden_dim))
-        self.O_w_sdv = theano.shared(value=O_w_sdv, name="O_w_sdv", borrow="True")
 
         self.params = [self.U_input, self.U_forget, self.U_output, self.W_input, self.W_forget, self.W_output,
                        self.U, self.W,
                        self.U_input_2, self.U_forget_2, self.U_output_2, self.W_input_2, self.W_forget_2, self.W_output_2,
                        self.U_2, self.W_2,
-                       self.O_w_mean,self.O_w_sdv,  self.ImageEmbedding
+                       self.O_w,  self.ImageEmbedding
                        #self.WordEmbedding,
                        ]
 
@@ -176,25 +175,24 @@ self.random_state.randint(999999))
             c2 = forget_gate2 * prev_content_2 + input_gate2 * stabilized_input2
             s2 = output_gate2 * T.tanh(c2)
 
-            output_mean = T.dot(self.O_w_mean, s2)
-            output_sdv = T.dot(self.O_w_sdv, s2)
+
             #sample_sdv_index = self.rng.choice(size=(1,), a=self.output_dim,p=output_sdv)[0]
-            viz_o_2 = T.nnet.softmax(T.dot(self.O_w_mean, s2))[0]
-            #visible_output_index = T.argmax(visible_output_1) # self.rng.choice(size=(1,), a=self.output_dim,p=visible_output_1)[0]
-            #viz_o_2 = T.eye(self.output_dim,dtype=theano.config.floatX)[visible_output_index]
+            viz_o_2 = T.nnet.softmax(T.dot(self.O_w, s2))[0]
+            visible_output_index = self.rng.choice(size=(1,), a=self.output_dim,p=viz_o_2)[0]
+            the_output = T.eye(self.output_dim,dtype=theano.config.floatX)[visible_output_index]
 
             #o = T.dot(self.WordEmbedding,viz_o)
             next_input = T.dot(self.ImageEmbedding, H)
             # T.concatenate([T.dot(self.ImageEmbedding, H), T.dot(self.WordEmbedding, viz_o_2)], axis=0)
 
-            return [viz_o_2, next_input, s, c, s2, c2, input_gate, forget_gate, output_gate,output_sdv,output_mean], \
+            return [viz_o_2,next_input, s, c, s2, c2, input_gate, forget_gate, output_gate,the_output], \
                    theano.scan_module.until(
-                       T.eq(T.argmax(viz_o_2),self.end_of_sentence_label_max))
+                       T.eq(visible_output_index,self.end_of_sentence_label_max))
 
 
 
-        [_, _,self.hidden_state, self.memory_content, _, _, self.input_gate, self.forget_gate,
-         self.output_gate, self.output_sdv,self.output_mean], scan_updates = theano.scan(
+        [self.cost_output, _,self.hidden_state, self.memory_content, _, _, self.input_gate, self.forget_gate,
+         self.output_gate, self.output], scan_updates = theano.scan(
             forward_step,
             #sequences=[X],
             truncate_gradient=-1,
@@ -205,25 +203,34 @@ self.random_state.randint(999999))
                           dict(initial=T.zeros(self.lstm_hidden_dim, dtype=theano.config.floatX)),
                           dict(initial= T.zeros(self.lstm_hidden_dim, dtype=theano.config.floatX)),
                           dict(initial=T.zeros(self.lstm_hidden_dim, dtype=theano.config.floatX))
-                , None, None, None, None,None
+                , None, None, None, None
                           ])
 
 
-        self.output = self.rng.normal(avg=self.output_mean,std=self.output_sdv)
-        self.predict = theano.function([H], [self.output],updates=scan_updates)
+
 
         params = self.params
 
         length = T.max([Y.shape[0], self.output.shape[0]])
 
+
+        padded_cost_output = T.zeros((length, Y.shape[1]))
+        padded_cost_output = T.set_subtensor(padded_cost_output[0:self.cost_output.shape[0], :], self.cost_output)
+        padded_cost_output = T.set_subtensor(padded_cost_output[self.cost_output.shape[0]:, :],
+                                        T.zeros(self.output_dim, "float32"))
+
         padded_output = T.zeros((length, Y.shape[1]))
         padded_output = T.set_subtensor(padded_output[0:self.output.shape[0], :], self.output)
         padded_output = T.set_subtensor(padded_output[self.output.shape[0]:, :],
-                                        T.zeros(self.output_dim, "float32"))
+                                             T.zeros(self.output_dim, "float32"))
 
         padded_Y = T.zeros((length, Y.shape[1]))
         padded_Y = T.set_subtensor(padded_Y[0:Y.shape[0], :], Y)
         padded_Y = T.set_subtensor(padded_Y[Y.shape[0]:, :], T.zeros(self.output_dim,"float32"))
+
+        #padded_cost_output = padded_cost_output * (padded_output + padded_Y)
+
+        padded_Y = padded_Y + (1 - (padded_output + padded_Y))  *  padded_cost_output
 
         lambda_1 = pow(10, -(T.log((self.lstm_hidden_dim + self.lstm_input_dim) / 2) / T.log(10)) - 2)
         lambda_2 = pow(10, -(T.log(self.lstm_hidden_dim) / T.log(10)) * 2 - 2)
@@ -235,7 +242,7 @@ self.random_state.randint(999999))
                 sequences=[y_true, y_pred])
             return (T.sum(results, axis=- 1))
 
-        cost = T.sum(T.nnet.categorical_crossentropy(padded_output + 0.00000001, padded_Y))
+        cost = T.sum(T.nnet.categorical_crossentropy(padded_cost_output + 0.00000001, padded_Y))
              #   + kullback_leibler(self.output_sdv[-1],random_normal_matrix((self.output_dim,1)))
             #   lambda_1 * sum([T.sum(param ** 2) for param in params])
         #+ lambda_2 * sum([T.sum(abs(param) > 0) for param in params])
@@ -243,9 +250,10 @@ self.random_state.randint(999999))
         updates = apply_momentum(updates_sgd, params, momentum=0.9)
 
         self.backprop_update = theano.function([H, Y], [self.output,cost], updates=updates+scan_updates)
-        self.get_output_without_update = theano.function([H, Y], [self.output, cost],updates=scan_updates)
-
+        self.predict = theano.function([H,Y], [self.output,cost], updates=scan_updates)
         #backprop_update_with_feedback_negative = theano.function([H, Y], [cost3], updates=feedback_updates_neg)
+
+        self.get_image_embedding = theano.function([H],[T.dot(self.ImageEmbedding,H)])
 
         """re_inforce_cost = -T.sum(self.output)
         re_inforce_grads = T.grad(re_inforce_cost,params)
@@ -298,14 +306,23 @@ if __name__ == '__main__':
         Dic[VOCAB[i]] = i
     ONE_HOT_VECS = np.eye(len(VOCAB))
 
-    number_of_concepts = 1
-    number_of_values_per_concept = 2
-    number_of_items_per_combination = 2
+    number_of_concepts = 2
+    number_of_values_per_concept = 3
+    number_of_items_per_combination = 3
     label_dim = number_of_concepts * number_of_values_per_concept + 1
     dg = DataSetGenerator(number_of_concepts, number_of_values_per_concept)
     dg.generate_data_with_marginal_labels(number_of_items_per_label=number_of_items_per_combination, core_item=0)
     items = dg.combined_items
     labels = dg.combined_labels
+
+    total_count = len(items)
+    test_count = (total_count // 5)
+
+    train_items = items[:-test_count]
+    test_items = items[-test_count:]
+    train_labels = labels[:-test_count]
+    test_labels = labels[-test_count:]
+
 
     last_index = np.argmax(dg.labels[0][-1])
     print(last_index)
@@ -313,9 +330,9 @@ if __name__ == '__main__':
                         lstm_input_dim=128,  # len(VOCAB),
                                lstm_hidden_dim=128,
                         output_dim=label_dim,
-                        learning_rate=0.1,
-                        dropout_rate=0.0,
-                        input_dropout_rate=0.0,
+                        learning_rate=0.01,
+                        dropout_rate=0.1,
+                        input_dropout_rate=0.1,
                         end_of_sentence_label_max=last_index)
 
     talker.define_network()
@@ -328,13 +345,45 @@ if __name__ == '__main__':
     import random
 
     start = time.time()
-    number_of_epochs = 400000
+    number_of_epochs = 300
+    test_cost = []
+    train_cost = []
     for e in np.arange(number_of_epochs):
-        for k in np.arange(len(items)):
-            output,cost = talker.backprop_update(np.asarray(items[k],dtype="float32"),np.asarray(labels[k],dtype="float32"))
-            print(str(k)+": "+get_string(labels[k],VOCAB,last_index)+" : "+get_string(output,VOCAB,last_index))
-            print(cost)
+        train_items_index = np.arange(len(train_items))
+        np.random.shuffle(train_items_index)
+        train_cost_ = 0
+        for k in train_items_index:
+            output,cost = talker.backprop_update(np.asarray(train_items[k],dtype="float32"),np.asarray(train_labels[k],dtype="float32"))
+            #print(str(k)+": "+get_string(train_labels[k],VOCAB,last_index)+" : "+get_string(output,VOCAB,last_index))
+            train_cost_ += cost
 
+        train_cost.append(train_cost_ / len(train_items_index))
+
+        test_cost_ = 0
+        for k in np.arange(len(test_items)):
+            output, cost = talker.predict(np.asarray(test_items[k], dtype="float32"),np.asarray(test_labels[k],dtype="float32"))
+            # print(str(k)+": "+get_string(train_labels[k],VOCAB,last_index)+" : "+get_string(output,VOCAB,last_index))
+            test_cost_ += cost
+
+        test_cost.append(test_cost_ / len(test_items))
+
+        print(str(e)+": "+str(train_cost[-1])+ '   ' + str(test_cost[-1]))
+
+        if (e+1) % 100 == 0:
+            Plotting.plot_performance(train_cost, test_cost)
+
+    train_embeddings = []
+    for k in np.arange(len(train_items)):
+        [embedding] = talker.get_image_embedding(np.asarray(train_items[k], dtype="float32"))
+        train_embeddings.append(embedding)
+
+    plot_distribution_t_SNE(np,asarray(train_embeddings),
+                            train_labels[:,0]  # [word_set.index(word) for word in words]
+                            , [get_string(l,VOCAB,last_index) for l in train_labels])
+
+    for k in np.arange(len(test_items)):
+        [embedding] = talker.get_image_embedding(np.asarray(test_items[k], dtype="float32"))
+        train_embeddings.append(embedding)
 
 
 

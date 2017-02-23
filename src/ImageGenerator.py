@@ -16,7 +16,7 @@ class ListernerLSTM(object):
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.output_dim = output_dim
-        self.learning_rate = 0.001
+        self.learning_rate = 0.01
         self.dropout_rate = dropout_rate
         self.input_dropout_rate = input_dropout_rate
         self.random_state = np.random.RandomState(23455)
@@ -176,12 +176,13 @@ class ListernerLSTM(object):
 
 
 
-        output = T.nnet.hard_sigmoid (self.output[-1]) #T.nnet.softmax(T.dot(self.W_out,T.sum(self.output.T,axis=1)))[0]
+        output = T.nnet.sigmoid (self.output[-1]) #T.nnet.softmax(T.dot(self.W_out,T.sum(self.output.T,axis=1)))[0]
 
         self.predict = theano.function([X],[output])
 
         params = self.params #+ self.output_params
-        cost = T.sum(abs(output - Y)) # T.sum(T.sum(4 - T.sum(abs(output - all_targets),axis=1)))
+        lambda_L1 = 0.001
+        cost =  T.sum(T.nnet.binary_crossentropy(T.clip(output, 1e-7, 1.0 - 1e-7),Y)) + lambda_L1 * T.sum(abs(params))
 
 
         updates =  adam(cost,params,learning_rate=0.0001) #apply_momentum(updates_sgd, params, momentum=0.9)
@@ -258,8 +259,8 @@ if __name__ == '__main__':
 
             target_label = train_items[k]
 
-            output, cost = lstm_listener.backprop_update(np.asarray(input_items,dtype="float32"),
-                                                         np.asarray(target_label,dtype="float32")
+            output, cost = lstm_listener.backprop_update(np.asarray(input_items,dtype="float32")
+                                                         , np.asarray(target_label,dtype="float32")
                                                          #, all_other_items
                                                          )
 
