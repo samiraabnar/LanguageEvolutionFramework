@@ -182,7 +182,7 @@ class ListernerLSTM(object):
 
         params = self.params #+ self.output_params
         lambda_L1 = 0.001
-        cost =  T.sum(T.nnet.binary_crossentropy(T.clip(output, 1e-7, 1.0 - 1e-7),Y)) + lambda_L1 * T.sum(abs(params))
+        cost =  T.sum(T.nnet.binary_crossentropy(T.clip(output, 1e-7, 1.0 - 1e-7),Y)) + lambda_L1 * T.sum(([ T.abs(p) for p in params]))
 
 
         updates =  adam(cost,params,learning_rate=0.0001) #apply_momentum(updates_sgd, params, momentum=0.9)

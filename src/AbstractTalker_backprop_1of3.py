@@ -331,8 +331,8 @@ if __name__ == '__main__':
                                lstm_hidden_dim=128,
                         output_dim=label_dim,
                         learning_rate=0.01,
-                        dropout_rate=0.1,
-                        input_dropout_rate=0.1,
+                        dropout_rate=0.25,
+                        input_dropout_rate=0.15,
                         end_of_sentence_label_max=last_index)
 
     talker.define_network()
@@ -345,7 +345,7 @@ if __name__ == '__main__':
     import random
 
     start = time.time()
-    number_of_epochs = 300
+    number_of_epochs = 150
     test_cost = []
     train_cost = []
     for e in np.arange(number_of_epochs):
@@ -377,7 +377,7 @@ if __name__ == '__main__':
         [embedding] = talker.get_image_embedding(np.asarray(train_items[k], dtype="float32"))
         train_embeddings.append(embedding)
 
-    plot_distribution_t_SNE(np,asarray(train_embeddings),
+    Plotting.plot_distribution_t_SNE(np.asarray(train_embeddings),
                             train_labels[:,0]  # [word_set.index(word) for word in words]
                             , [get_string(l,VOCAB,last_index) for l in train_labels])
 
