@@ -28,21 +28,21 @@ class ImageGenerator(object):
         self.all_items = all_items
 
     def init_lstm_weights(self):
-        U_input = weightfunctions.random_normal_matrix((self.hidden_dim, self.input_dim),scale=1.0)
+        U_input = weightfunctions.random_normal_matrix((self.hidden_dim, self.input_dim))
 
-        U_forget = weightfunctions.random_normal_matrix((self.hidden_dim, self.input_dim),scale=1.0)
+        U_forget = weightfunctions.random_normal_matrix((self.hidden_dim, self.input_dim))
 
-        U_output = weightfunctions.random_normal_matrix((self.hidden_dim, self.input_dim),scale=1.0)
+        U_output = weightfunctions.random_normal_matrix((self.hidden_dim, self.input_dim))
 
-        W_input = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        W_input = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
 
-        W_forget = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        W_forget = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
 
-        W_output = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        W_output = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
 
-        U = weightfunctions.random_normal_matrix((self.hidden_dim, self.input_dim),scale=1.0)
+        U = weightfunctions.random_normal_matrix((self.hidden_dim, self.input_dim))
 
-        W = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        W = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
 
 
 
@@ -59,21 +59,21 @@ class ImageGenerator(object):
         self.U_forget = theano.shared(value=U_forget, name="U_forget" , borrow="True")
 
 
-        U_input_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        U_input_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
 
-        U_forget_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        U_forget_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
 
-        U_output_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        U_output_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
 
-        W_input_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        W_input_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
 
-        W_forget_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        W_forget_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
 
-        W_output_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        W_output_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
 
-        U_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        U_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
 
-        W_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        W_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
 
 
         self.W_2 = theano.shared(value=W_2, name="W_2" , borrow="True")
@@ -92,7 +92,7 @@ class ImageGenerator(object):
 
 
 
-        O_w = weightfunctions.random_normal_matrix((self.output_dim, self.hidden_dim),scale=1.0)
+        O_w = weightfunctions.random_normal_matrix((self.output_dim, self.hidden_dim))
 
         self.O_w = theano.shared(value=O_w, name="O_w" , borrow="True")
 
@@ -108,8 +108,8 @@ class ImageGenerator(object):
 
     def define_network(self):
 
-        X = T.matrix('input')
-        Y = T.vector('output')
+        X = T.tensor3('input')
+        Y = T.matrix('output')
         all_targets = T.matrix("targets")
 
         #H = T.vector('init_state')
@@ -167,10 +167,10 @@ class ImageGenerator(object):
             forward_step,
             sequences=[X],
             truncate_gradient=-1,
-            outputs_info= [None,dict(initial=T.zeros(self.hidden_dim, dtype=theano.config.floatX)),
-                               dict(initial=T.zeros(self.hidden_dim, dtype=theano.config.floatX)),
-                               dict(initial=T.zeros(self.hidden_dim, dtype=theano.config.floatX)),
-                               dict(initial=T.zeros(self.hidden_dim, dtype=theano.config.floatX))
+            outputs_info= [None,dict(initial=T.zeros((X.shape[0],self.hidden_dim), dtype=theano.config.floatX)),
+                               dict(initial=T.zeros((X.shape[0],self.hidden_dim), dtype=theano.config.floatX)),
+                               dict(initial=T.zeros((X.shape[0],self.hidden_dim), dtype=theano.config.floatX)),
+                               dict(initial=T.zeros((X.shape[0],self.hidden_dim), dtype=theano.config.floatX))
                                , None, None, None
                                ])
 
@@ -233,11 +233,16 @@ if __name__ == '__main__':
     lstm_listener = ImageGenerator(input_dim = label_dim,
                                    hidden_dim = 128,
                                    output_dim = number_of_values_per_concept*number_of_concepts,
-                                   dropout_rate=0.9,
+                                   dropout_rate=0.5,
                                    input_dropout_rate=.1
                                    , all_items=items)
 
     lstm_listener.define_network()
+
+    outputs,costs = lstm_listener.predict(np.asarray(test_labels, dtype="float32"),
+                                          np.asarray(test_labels, dtype="float32")
+                                         )
+
 
     import time
     import random
@@ -261,19 +266,6 @@ if __name__ == '__main__':
             all_other_index = np.asarray(all_other_index)
 
             all_other_items = np.asarray(train_items,"float32")[all_other_index,:]
-            """item = []
-                        shuffled_index = []
-                        for s in np.arange(number_of_items_per_combination):
-                            item.append(items[k][s*(number_of_values_per_concept*number_of_concepts):(s+1)*(number_of_values_per_concept*number_of_concepts)])
-                            shuffled_index.append(s)
-
-                        np.random.shuffle(shuffled_index)
-                        shuffled_item = []
-                        for i in shuffled_index:
-                            shuffled_item.append(item[i])
-
-                        target_label = np.eye(number_of_items_per_combination,dtype="float32")[shuffled_index.index(0)]
-            """
             input_items = train_labels[k]
             target_label = train_items[k]
             output, cost = lstm_listener.backprop_update(np.asarray(input_items,dtype="float32")
@@ -311,9 +303,7 @@ if __name__ == '__main__':
         print("test accuracy: "+str(test_accuracy))
 
         iteration_train_cost.append(np.mean(train_costs))
-        iteration_test_cost.append(np.mean(test_costs))
-        iteration_test_accuracy.append(test_accuracy)
-        iteration_train_accuracy.append(train_accuracy)
+        iteration_train_cost.append(np.mean(test_costs))
+        iteration_test_accuracy = [test_accuracy]
 
-    Plotting.plot_performance(iteration_train_cost, iteration_test_cost)
-    Plotting.plot_performance(iteration_train_accuracy, iteration_test_accuracy)
+    Plotting.plot_performance(train_costs, test_costs)
