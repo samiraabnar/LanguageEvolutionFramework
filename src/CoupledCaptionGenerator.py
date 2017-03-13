@@ -8,7 +8,7 @@ import sys
 sys.path.append('../../')
 
 from theanolm.network.weightfunctions import *
-from lasagne.updates import sgd, apply_momentum
+from lasagne.updates import adam
 import theano.tensor.shared_randomstreams
 
 from generate_data import *
@@ -33,10 +33,10 @@ class TalkerLSTM(object):
         self.dropout_rate = dropout_rate
         self.input_dropout_rate = input_dropout_rate
         self.random_state = np.random.RandomState(23455)
-        self.rng = theano.tensor.shared_randomstreams.RandomStreams(
-self.random_state.randint(999999))
+        self.rng = theano.tensor.shared_randomstreams.RandomStreams(self.random_state.randint(999999))
         self.end_of_sentence_label_max = theano.shared(value=end_of_sentence_label_max, name="EndSymbol", borrow="True")
 
+        self.test = False
         #self.image_reader = VGG_16('vgg16_weights.h5')
         #self.image_reader.model.compile(optimizer='adam', loss='categorical_crossentropy')
 
@@ -48,21 +48,21 @@ self.random_state.randint(999999))
        # self.WordEmbedding = theano.shared(value=WordEmbedding, name="WordEmbedding", borrow="True")
         self.ImageEmbedding = theano.shared(value=ImageEmbedding, name="ImageEmbedding", borrow="True")
 
-        U_input = random_normal_matrix((self.lstm_hidden_dim, self.lstm_input_dim))
+        U_input = random_normal_matrix((self.lstm_hidden_dim, self.lstm_input_dim),scale=1.0)
 
-        U_forget = random_normal_matrix((self.lstm_hidden_dim, self.lstm_input_dim))
+        U_forget = random_normal_matrix((self.lstm_hidden_dim, self.lstm_input_dim),scale=1.0)
 
-        U_output = random_normal_matrix((self.lstm_hidden_dim, self.lstm_input_dim))
+        U_output = random_normal_matrix((self.lstm_hidden_dim, self.lstm_input_dim),scale=1.0)
 
-        W_input = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim))
+        W_input = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim),scale=1.0)
 
-        W_forget = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim))
+        W_forget = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim),scale=1.0)
 
-        W_output = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim))
+        W_output = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim),scale=1.0)
 
-        U = random_normal_matrix((self.lstm_hidden_dim, self.lstm_input_dim))
+        U = random_normal_matrix((self.lstm_hidden_dim, self.lstm_input_dim),scale=1.0)
 
-        W = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim))
+        W = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim),scale=1.0)
 
         self.W = theano.shared(value=W, name="W" , borrow="True")
         self.U = theano.shared(value=U, name="U" , borrow="True")
@@ -77,21 +77,21 @@ self.random_state.randint(999999))
         self.U_forget = theano.shared(value=U_forget, name="U_forget" , borrow="True")
 
 
-        U_input_2 = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim))
+        U_input_2 = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim),scale=1.0)
 
-        U_forget_2 = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim))
+        U_forget_2 = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim),scale=1.0)
 
-        U_output_2 = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim))
+        U_output_2 = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim),scale=1.0)
 
-        W_input_2 = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim))
+        W_input_2 = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim),scale=1.0)
 
-        W_forget_2 = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim))
+        W_forget_2 = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim),scale=1.0)
 
-        W_output_2 = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim))
+        W_output_2 = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim),scale=1.0)
 
-        U_2 = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim))
+        U_2 = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim),scale=1.0)
 
-        W_2 = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim))
+        W_2 = random_normal_matrix((self.lstm_hidden_dim, self.lstm_hidden_dim),scale=1.0)
 
 
 
@@ -111,7 +111,7 @@ self.random_state.randint(999999))
 
 
 
-        O_w = random_normal_matrix((self.output_dim, self.lstm_hidden_dim))
+        O_w = random_normal_matrix((self.output_dim, self.lstm_hidden_dim),scale=1.0)
         self.O_w = theano.shared(value=O_w, name="O_w" , borrow="True")
 
 
@@ -129,6 +129,9 @@ self.random_state.randint(999999))
         Y = T.matrix('output')
         H = T.vector('init_state')
 
+        O = T.vector('other_item')
+
+
         self.init_lstm_weights()
 
         def D(x):
@@ -139,18 +142,12 @@ self.random_state.randint(999999))
                 return x * np.random.binomial(1, retain_prob, self.lstm_hidden_dim).astype(dtype=np.float32)
 
         def Input_D(x):
-            if self.input_dropout_rate == 0:
+            if self.input_dropout_rate == 0 or self.test == True:
                 return x
             else:
                 retain_prob = 1 - self.dropout_rate
                 return x * np.random.binomial(1, retain_prob, self.lstm_input_dim).astype(dtype=np.float32)
 
-        def sample(x):
-            if self.input_dropout_rate == 0:
-                return x
-            else:
-                retain_prob = 1 - self.dropout_rate
-                return x * np.random.binomial(1, retain_prob, self.lstm_input_dim).astype(dtype=np.float32)
 
         def forward_step(viz_o,x_t, prev_state, prev_content, prev_state_2, prev_content_2):
             input_gate = T.nnet.hard_sigmoid(
@@ -191,7 +188,42 @@ self.random_state.randint(999999))
 
 
 
-        [self.cost_output, _,self.hidden_state, self.memory_content, _, _, self.input_gate, self.forget_gate,
+        def hearing_step(x_t, prev_state, prev_content,prev_state_2,prev_content_2):
+            input_gate = T.nnet.hard_sigmoid(
+                T.dot(Input_D(self.U_input), x_t) + T.dot(D(self.W_input), prev_state))
+            forget_gate = T.nnet.hard_sigmoid(
+                T.dot(Input_D(self.U_forget), x_t) + T.dot(D(self.W_forget), prev_state))
+            output_gate = T.nnet.hard_sigmoid(
+                T.dot(Input_D(self.U_output), x_t) + T.dot(D(self.W_output), prev_state))
+
+            stabilized_input = T.tanh(T.dot(Input_D(self.U), x_t) + T.dot(D(self.W), prev_state))
+            c = forget_gate * prev_content + input_gate * stabilized_input
+            s = output_gate * T.tanh(c)
+
+            input_gate2 = T.nnet.hard_sigmoid(
+                T.dot(D(self.U_input_2), s) + T.dot(D(self.W_input_2), prev_state_2))
+            forget_gate2 = T.nnet.hard_sigmoid(
+                T.dot(D(self.U_forget_2), s) + T.dot(D(self.W_forget_2), prev_state_2))
+            output_gate2 = T.nnet.hard_sigmoid(
+                T.dot(D(self.U_output_2), s) + T.dot(D(self.W_output_2), prev_state_2))
+
+            stabilized_input2 = T.tanh(T.dot(D(self.U_2), s) + T.dot(D(self.W_2), prev_state_2))
+            c2 = forget_gate2 * prev_content_2 + input_gate2 * stabilized_input2
+            s2 = output_gate2 * T.tanh(c2)
+
+
+
+            o = T.dot(self.O_w, s2)
+
+            return [o, s, c, s2, c2, input_gate, forget_gate, output_gate]
+
+
+
+
+
+
+
+        [self.cost_output, _,_,_,self.hidden_state, self.memory_content, self.input_gate, self.forget_gate,
          self.output_gate, self.output], scan_updates = theano.scan(
             forward_step,
             #sequences=[X],
@@ -206,8 +238,17 @@ self.random_state.randint(999999))
                 , None, None, None, None
                           ])
 
-
-
+        [self.hearing_output, self.hearing_hidden_state, _, _, _, _, _,
+         _], hearing_updates = theano.scan(
+            hearing_step,
+            sequences=[],
+            truncate_gradient=-1,
+            outputs_info=[None, dict(initial=T.zeros(self.hidden_dim, dtype=theano.config.floatX)),
+                          dict(initial=T.zeros(self.hidden_dim, dtype=theano.config.floatX)),
+                          dict(initial=T.zeros(self.hidden_dim, dtype=theano.config.floatX)),
+                          dict(initial=T.zeros(self.hidden_dim, dtype=theano.config.floatX))
+                , None, None, None
+                          ])
 
         params = self.params
 
@@ -232,22 +273,25 @@ self.random_state.randint(999999))
 
         padded_Y = padded_Y + (1 - (padded_output + padded_Y))  *  padded_cost_output
 
+
+
+
+
+
         lambda_1 = pow(10, -(T.log((self.lstm_hidden_dim + self.lstm_input_dim) / 2) / T.log(10)) - 2)
         lambda_2 = pow(10, -(T.log(self.lstm_hidden_dim) / T.log(10)) * 2 - 2)
 
-        def kullback_leibler(y_pred, y_true):
-            eps = 0.0001
-            results, updates = theano.scan(
-                lambda y_true, y_pred: (y_true + eps) * (T.log(y_true + eps) - T.log(y_pred + eps)),
-                sequences=[y_true, y_pred])
-            return (T.sum(results, axis=- 1))
 
-        cost = T.sum(T.nnet.categorical_crossentropy(padded_cost_output + 0.00000001, padded_Y))
-             #   + kullback_leibler(self.output_sdv[-1],random_normal_matrix((self.output_dim,1)))
-            #   lambda_1 * sum([T.sum(param ** 2) for param in params])
+        lambda_L1 = 0.001
+        L1_Loss = lambda_L1 * T.sum([T.sum(abs(p)) for p in params])
+        L2_Loss = lambda_2 * T.sum([T.sum(p ** 2) for p in params])
+        cost = T.sum(T.nnet.categorical_crossentropy(padded_cost_output + 0.00000001, padded_Y)) + L1_Loss + L2_Loss
+        #   +   lambda_1 * sum([T.sum(param ** 2) for param in params])
         #+ lambda_2 * sum([T.sum(abs(param) > 0) for param in params])
-        updates_sgd = sgd(cost, params, learning_rate=self.learning_rate)
-        updates = apply_momentum(updates_sgd, params, momentum=0.9)
+        updates = adam(cost, params, learning_rate=self.learning_rate)
+
+
+
 
         self.backprop_update = theano.function([H, Y], [self.output,cost], updates=updates+scan_updates)
         self.predict = theano.function([H,Y], [self.output,cost], updates=scan_updates)
@@ -298,6 +342,49 @@ def get_probabilistic_sequence(list_of_vec,end_index):
 
 
 
+class Experiment(object):
+    def __init__(self,id,relative_test_size,number_of_concepts,number_of_values_per_concept,number_of_items_per_combination):
+        self.id = id
+
+        self.number_of_concepts = number_of_concepts
+        self.number_of_values_per_concept = number_of_values_per_concept
+        self.number_of_items_per_combination = number_of_items_per_combination
+
+        self.relative_test_size = relative_test_size
+        self.test_items = []
+        self.train_items = []
+
+        self.iteration_train_cost = []
+        self.iteration_test_cost = []
+        self.iteration_test_accuracy = []
+        self.iteration_train_accuracy = []
+
+
+    def prepare_data(self):
+        number_of_concepts = self.number_of_concepts
+        number_of_values_per_concept = self.number_of_values_per_concept
+        self.label_dim = number_of_concepts * number_of_values_per_concept + 1
+
+        dg = DataSetGenerator(number_of_concepts, number_of_values_per_concept)
+        dg.generate_data()
+        self.items = list(dg.items)
+        self.labels = list(dg.labels)
+
+        indexes = np.arange(len(self.items))
+        np.random.shuffle(indexes)
+
+        self.items = np.asarray(self.items)[indexes, :]
+        self.labels = np.asarray(self.labels)[indexes]
+
+        total_count = len(self.items)
+        test_count = (total_count // self.relative_test_size)
+
+        self.train_items = self.items[:-test_count]
+        self.test_items = self.items[-test_count:]
+        self.train_labels = self.labels[:-test_count]
+        self.test_labels = self.labels[-test_count:]
+        self.last_index = np.argmax(dg.labels[0][-1])
+
 if __name__ == '__main__':
 
     VOCAB = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', '<\s>']
@@ -306,34 +393,24 @@ if __name__ == '__main__':
         Dic[VOCAB[i]] = i
     ONE_HOT_VECS = np.eye(len(VOCAB))
 
-    number_of_concepts = 2
-    number_of_values_per_concept = 3
-    number_of_items_per_combination = 3
-    label_dim = number_of_concepts * number_of_values_per_concept + 1
-    dg = DataSetGenerator(number_of_concepts, number_of_values_per_concept)
-    dg.generate_data_with_marginal_labels(number_of_items_per_label=number_of_items_per_combination, core_item=0)
-    items = dg.combined_items
-    labels = dg.combined_labels
+    relative_test_sizes = [5,4,3,2]
+    i= 0
+    exp = Experiment(id=i + 100,
+                     relative_test_size=relative_test_sizes[i],
+                     number_of_concepts=3,
+                     number_of_values_per_concept=3,
+                     number_of_items_per_combination=3)
 
-    total_count = len(items)
-    test_count = (total_count // 5)
+    exp.prepare_data()
 
-    train_items = items[:-test_count]
-    test_items = items[-test_count:]
-    train_labels = labels[:-test_count]
-    test_labels = labels[-test_count:]
-
-
-    last_index = np.argmax(dg.labels[0][-1])
-    print(last_index)
-    talker = TalkerLSTM(image_rep_dim=number_of_concepts * number_of_values_per_concept * number_of_items_per_combination,
-                        lstm_input_dim=128,  # len(VOCAB),
+    talker = TalkerLSTM(image_rep_dim=exp.number_of_concepts * exp.number_of_values_per_concept,
+                        lstm_input_dim=256,  # len(VOCAB),
                                lstm_hidden_dim=256,
-                        output_dim=label_dim,
+                        output_dim=exp.label_dim,
                         learning_rate=0.01,
                         dropout_rate=0.9,
-                        input_dropout_rate=0.,
-                        end_of_sentence_label_max=last_index)
+                        input_dropout_rate=0.2,
+                        end_of_sentence_label_max=exp.last_index)
 
     talker.define_network()
 
@@ -341,51 +418,56 @@ if __name__ == '__main__':
 
     print("Network defined :)")
 
-    import time
-    import random
-
-    start = time.time()
-    number_of_epochs = 150
+    number_of_epochs = 300
     test_cost = []
     train_cost = []
     for e in np.arange(number_of_epochs):
-        train_items_index = np.arange(len(train_items))
+        train_items_index = np.arange(len(exp.train_items))
         np.random.shuffle(train_items_index)
         train_cost_ = 0
         for k in train_items_index:
-            output,cost = talker.backprop_update(np.asarray(train_items[k],dtype="float32"),np.asarray(train_labels[k],dtype="float32"))
+            output,cost = talker.backprop_update(np.asarray(exp.train_items[k],dtype="float32"),np.asarray(exp.train_labels[k],dtype="float32"))
             #print(str(k)+": "+get_string(train_labels[k],VOCAB,last_index)+" : "+get_string(output,VOCAB,last_index))
             train_cost_ += cost
 
         train_cost.append(train_cost_ / len(train_items_index))
 
+        talker.test = True
         test_cost_ = 0
-        for k in np.arange(len(test_items)):
-            output, cost = talker.predict(np.asarray(test_items[k], dtype="float32"),np.asarray(test_labels[k],dtype="float32"))
+        for k in np.arange(len(exp.test_items)):
+            output, cost = talker.predict(np.asarray(exp.test_items[k], dtype="float32"),np.asarray(exp.test_labels[k],dtype="float32"))
             # print(str(k)+": "+get_string(train_labels[k],VOCAB,last_index)+" : "+get_string(output,VOCAB,last_index))
             test_cost_ += cost
 
-        test_cost.append(test_cost_ / len(test_items))
+        test_cost.append(test_cost_ / len(exp.test_items))
+        talker.test = False
 
         print(str(e)+": "+str(train_cost[-1])+ '   ' + str(test_cost[-1]))
 
-        if (e+1) % 100 == 0:
+        """if (e+1) % 100 == 0:
             Plotting.plot_performance(train_cost, test_cost)
+        """
 
-    train_embeddings = []
-    for k in np.arange(len(train_items)):
-        [embedding] = talker.get_image_embedding(np.asarray(train_items[k], dtype="float32"))
-        train_embeddings.append(embedding)
+    embeddings = []
+    text_train = []
+    labels = []
+    for k in np.arange(len(exp.train_items)):
+        [embedding] = talker.get_image_embedding(np.asarray(exp.train_items[k], dtype="float32"))
+        embeddings.append(embedding)
+        text_train.append(10)
+        labels.append(get_string(exp.train_labels[k],VOCAB,exp.last_index))
 
-    Plotting.plot_distribution_t_SNE(np.asarray(train_embeddings),
-                            train_labels[:,0]  # [word_set.index(word) for word in words]
-                            , [get_string(l,VOCAB,last_index) for l in train_labels])
+    for k in np.arange(len(exp.test_items)):
+        [embedding] = talker.get_image_embedding(np.asarray(exp.test_items[k], dtype="float32"))
+        embeddings.append(embedding)
+        text_train.append(30)
+        labels.append(get_string(exp.test_labels[k], VOCAB, exp.last_index))
 
-    for k in np.arange(len(test_items)):
-        [embedding] = talker.get_image_embedding(np.asarray(test_items[k], dtype="float32"))
-        train_embeddings.append(embedding)
+    Plotting.plot_distribution_t_SNE(np.asarray(embeddings),
+                                    text_train #np.argmax(exp.labels[:,:,2], axis=1) + 10* np.argmax(exp.train_labels[:,:,1], axis=1)  + 100* np.argmax(exp.train_labels[:,:,0], axis=1)# [word_set.index(word) for word in words]
+                            , labels)
 
 
 
-    end = time.time()
-    print ("total time: "+str(end - start))
+
+    # inputdrop out --> 0  0.2

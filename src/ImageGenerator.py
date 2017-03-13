@@ -8,7 +8,7 @@ from generate_data import *
 from Util import *
 from scipy.spatial import *
 
-
+import pickle
 
 class ImageGenerator(object):
     def __init__(self, input_dim, hidden_dim, output_dim,dropout_rate,input_dropout_rate,all_items):
@@ -26,6 +26,7 @@ class ImageGenerator(object):
 
         self.item_tree = cKDTree(all_items)
         self.all_items = all_items
+        self.test = False
 
     def init_lstm_weights(self):
         U_input = weightfunctions.random_normal_matrix((self.hidden_dim, self.input_dim),scale=1.0)
@@ -117,14 +118,14 @@ class ImageGenerator(object):
         self.init_lstm_weights()
 
         def D(x):
-            if self.dropout_rate == 0:
+            if self.dropout_rate == 0 or self.test == True:
                 return x
             else:
                 retain_prob = 1 - self.dropout_rate
                 return x * np.random.binomial(1, retain_prob, self.hidden_dim).astype(dtype=np.float32)
 
         def Input_D(x):
-            if self.input_dropout_rate == 0:
+            if self.input_dropout_rate == 0 or self.test == True:
                 return x
             else:
                 retain_prob = 1 - self.dropout_rate
@@ -182,12 +183,12 @@ class ImageGenerator(object):
 
 
         params = self.params #+ self.output_params
-        lambda_L1 = 0.001
+        lambda_L1 = 0.0001
         L1_Loss = lambda_L1 * T.sum([ T.sum(abs(p)) for p in params])
         cost =  T.sum(T.nnet.binary_crossentropy(T.clip(output, 1e-7, 1.0 - 1e-7),Y)) + L1_Loss
 
 
-        updates =  adam(cost,params,learning_rate=0.0001) #apply_momentum(updates_sgd, params, momentum=0.9)
+        updates =  adam(cost,params,learning_rate=self.learning_rate) #apply_momentum(updates_sgd, params, momentum=0.9)
         self.backprop_update = theano.function([X,Y],[output,cost],updates=updates)
 
         self.predict = theano.function([X,Y], [output, cost])
@@ -203,54 +204,71 @@ class ImageGenerator(object):
         return corrects / len(predictions)
 
 
+class Experiment(object):
+    def __init__(self,id,relative_test_size,number_of_concepts,number_of_values_per_concept,number_of_items_per_combination):
+        self.id = id
+
+        self.number_of_concepts = number_of_concepts
+        self.number_of_values_per_concept = number_of_values_per_concept
+        self.number_of_items_per_combination = number_of_items_per_combination
+
+        self.relative_test_size = relative_test_size
+        self.test_items = []
+        self.train_items = []
+
+        self.iteration_train_cost = []
+        self.iteration_test_cost = []
+        self.iteration_test_accuracy = []
+        self.iteration_train_accuracy = []
 
 
-if __name__ == '__main__':
-    VOCAB = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', '<\s>']
-    Dic = {}
-    for i in np.arange(len(VOCAB)):
-        Dic[VOCAB[i]] = i
-    ONE_HOT_VECS = np.eye(len(VOCAB))
+    def prepare_data(self):
+        number_of_concepts = self.number_of_concepts
+        number_of_values_per_concept = self.number_of_values_per_concept
+        self.label_dim = number_of_concepts * number_of_values_per_concept + 1
 
-    number_of_concepts = 3
-    number_of_values_per_concept = 3
-    number_of_items_per_combination = 3
-    label_dim = number_of_concepts * number_of_values_per_concept + 1
-    dg = DataSetGenerator(number_of_concepts, number_of_values_per_concept)
-    #dg.generate_data_with_marginal_labels(number_of_items_per_label=number_of_items_per_combination, core_item=0)
-    dg.generate_data()
-    items = dg.items
-    labels = dg.labels
+        dg = DataSetGenerator(number_of_concepts, number_of_values_per_concept)
+        dg.generate_data()
+        self.items = list(dg.items)
+        self.labels = list(dg.labels)
 
-    total_count = len(items)
-    test_count = (total_count // 5)
+        indexes = np.arange(len(self.items))
+        np.random.shuffle(indexes)
 
-    train_items = items[:-test_count]
-    test_items = items[-test_count:]
-    train_labels = labels[:-test_count]
-    test_labels = labels[-test_count:]
+        self.items = np.asarray(self.items)[indexes, :]
+        self.labels = np.asarray(self.labels)[indexes]
 
-    lstm_listener = ImageGenerator(input_dim = label_dim,
-                                   hidden_dim = 128,
-                                   output_dim = number_of_values_per_concept*number_of_concepts,
+        total_count = len(self.items)
+        test_count = (total_count // self.relative_test_size)
+
+        self.train_items = self.items[:-test_count]
+        self.test_items = self.items[-test_count:]
+        self.train_labels = self.labels[:-test_count]
+        self.test_labels = self.labels[-test_count:]
+        self.last_index = np.argmax(dg.labels[0][-1])
+
+    def save(self):
+        pass
+
+    def print_ordered_items_names(self):
+        for i in np.arange(len(self.items)):
+            print(get_string(self.labels[i], VOCAB, self.last_index))
+
+
+def do_the_exp(exp):
+    lstm_listener = ImageGenerator(input_dim = exp.label_dim,
+                                   hidden_dim = 256,
+                                   output_dim = exp.number_of_values_per_concept*exp.number_of_concepts,
                                    dropout_rate=0.9,
-                                   input_dropout_rate=.1
-                                   , all_items=items)
+                                   input_dropout_rate=.0
+                                   , all_items=exp.items)
 
     lstm_listener.define_network()
 
-    import time
-    import random
+    number_of_epochs = 500
 
-    start = time.time()
-    number_of_epochs = 3000
-    iteration_train_cost = []
-    iteration_test_cost = []
-
-    iteration_test_accuracy = []
-    iteration_train_accuracy = []
     for e in np.arange(number_of_epochs):
-        train_items_index = np.arange(len(train_labels))
+        train_items_index = np.arange(len(exp.train_labels))
         np.random.shuffle(train_items_index)
         train_costs = []
         train_predictions = []
@@ -260,7 +278,7 @@ if __name__ == '__main__':
             all_other_index.remove(k)
             all_other_index = np.asarray(all_other_index)
 
-            all_other_items = np.asarray(train_items,"float32")[all_other_index,:]
+            all_other_items = np.asarray(exp.train_items,"float32")[all_other_index,:]
             """item = []
                         shuffled_index = []
                         for s in np.arange(number_of_items_per_combination):
@@ -274,8 +292,8 @@ if __name__ == '__main__':
 
                         target_label = np.eye(number_of_items_per_combination,dtype="float32")[shuffled_index.index(0)]
             """
-            input_items = train_labels[k]
-            target_label = train_items[k]
+            input_items = exp.train_labels[k]
+            target_label = exp.train_items[k]
             output, cost = lstm_listener.backprop_update(np.asarray(input_items,dtype="float32")
                                                          , np.asarray(target_label,dtype="float32")
                                                          #, all_other_items
@@ -285,15 +303,16 @@ if __name__ == '__main__':
             train_predictions.append(output)
             train_targets.append(np.asarray(target_label,dtype="float32"))
 
-        test_items_index =  np.arange(len(test_items))
+        test_items_index =  np.arange(len(exp.test_items))
         test_costs = []
         predictions = []
         targets = []
+        lstm_listener.test = True
         for k in test_items_index:
-            input_items = test_labels[k]  # np.concatenate(tuple(shuffled_item),axis=0)
+            input_items = exp.test_labels[k]  # np.concatenate(tuple(shuffled_item),axis=0)
             # input_items = [np.concatenate((input_items,word),axis=0) for word in labels[k]]
 
-            target_label = test_items[k]
+            target_label = exp.test_items[k]
 
             output, cost = lstm_listener.predict(np.asarray(input_items, dtype="float32"),
                                                  np.asarray(target_label, dtype="float32")
@@ -302,7 +321,7 @@ if __name__ == '__main__':
             targets.append(np.asarray(target_label, dtype="float32"))
 
             test_costs.append(cost)
-
+        lstm_listener.test = False
         test_accuracy = lstm_listener.calculate_accuracy(predictions,targets)
         train_accuracy = lstm_listener.calculate_accuracy(train_predictions, train_targets)
         print("train_cost: " + str(np.mean(train_costs)))
@@ -310,10 +329,47 @@ if __name__ == '__main__':
         print("train accuracy: " + str(train_accuracy))
         print("test accuracy: "+str(test_accuracy))
 
-        iteration_train_cost.append(np.mean(train_costs))
-        iteration_test_cost.append(np.mean(test_costs))
-        iteration_test_accuracy.append(test_accuracy)
-        iteration_train_accuracy.append(train_accuracy)
+        exp.iteration_train_cost.append(np.mean(train_costs))
+        exp.iteration_test_cost.append(np.mean(test_costs))
+        exp.iteration_test_accuracy.append(test_accuracy)
+        exp.iteration_train_accuracy.append(train_accuracy)
 
-    Plotting.plot_performance(iteration_train_cost, iteration_test_cost)
-    Plotting.plot_performance(iteration_train_accuracy, iteration_test_accuracy)
+    pickle.dump(exp, open("exp"+str(exp.id),"wb"))
+
+if __name__ == '__main__':
+    VOCAB = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', '<\s>']
+    Dic = {}
+    for i in np.arange(len(VOCAB)):
+        Dic[VOCAB[i]] = i
+    ONE_HOT_VECS = np.eye(len(VOCAB))
+
+    #exp1 exp2 exp3 exp4
+    """
+    relative_test_sizes = [5,4,3,2]
+    for i in np.arange(len(relative_test_sizes)):
+        exp = Experiment(id=i+1,
+                relative_test_size=relative_test_sizes[i],
+                number_of_concepts=3,
+                number_of_values_per_concept=3,
+                number_of_items_per_combination=3)
+
+        exp.prepare_data()
+        do_the_exp((exp))
+    """
+
+    """relative_test_sizes = [5, 4, 3, 2]
+    for i in np.arange(len(relative_test_sizes)):
+        exp = Experiment(id=i + 100,
+                relative_test_size=relative_test_sizes[i],
+                number_of_concepts=3,
+                number_of_values_per_concept=4,
+                number_of_items_per_combination=3)
+
+        exp.prepare_data()
+        do_the_exp((exp))
+
+    """
+
+    exp = pickle.load(open("exp4", "rb"))
+    Plotting.plot_performance(exp.iteration_train_cost, exp.iteration_test_cost)
+    Plotting.plot_performance(exp.iteration_train_accuracy, exp.iteration_test_accuracy)

@@ -3,10 +3,12 @@ import theano.tensor as T
 import numpy as np
 from theanolm.network import weightfunctions
 from lasagne.updates import adam
-from generate_data import *
-
-from Util import *
 from scipy.spatial import *
+import pickle
+
+from generate_data import *
+from Util import *
+
 
 
 
@@ -28,11 +30,11 @@ class ImageGenerator(object):
         self.all_items = all_items
 
     def init_lstm_weights(self):
-        U_input = weightfunctions.random_normal_matrix((self.hidden_dim, self.input_dim))
+        U_input = weightfunctions.random_normal_matrix((self.input_dim, self.hidden_dim))
 
-        U_forget = weightfunctions.random_normal_matrix((self.hidden_dim, self.input_dim))
+        U_forget = weightfunctions.random_normal_matrix((self.input_dim, self.hidden_dim))
 
-        U_output = weightfunctions.random_normal_matrix((self.hidden_dim, self.input_dim))
+        U_output = weightfunctions.random_normal_matrix((self.input_dim, self.hidden_dim))
 
         W_input = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
 
@@ -40,7 +42,7 @@ class ImageGenerator(object):
 
         W_output = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
 
-        U = weightfunctions.random_normal_matrix((self.hidden_dim, self.input_dim))
+        U = weightfunctions.random_normal_matrix((self.input_dim, self.hidden_dim))
 
         W = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
 
@@ -92,15 +94,19 @@ class ImageGenerator(object):
 
 
 
-        O_w = weightfunctions.random_normal_matrix((self.output_dim, self.hidden_dim))
+        O_w = weightfunctions.random_normal_matrix((self.hidden_dim, self.output_dim))
 
         self.O_w = theano.shared(value=O_w, name="O_w" , borrow="True")
+
+        ItemEmbedding = weightfunctions.random_normal_matrix((self.output_dim, self.hidden_dim))
+        self.ItemEmbedding = theano.shared(value=ItemEmbedding, name="ItemEmbedding" , borrow="True")
 
         self.params = [self.U_input, self.U_forget, self.U_output, self.W_input, self.W_forget, self.W_output,
                        self.U, self.W,
                        self.U_input_2, self.U_forget_2, self.U_output_2, self.W_input_2, self.W_forget_2, self.W_output_2,
                        self.U_2, self.W_2
                        ,self.O_w
+                       ,self.ItemEmbedding
                        ]
 
 
@@ -132,30 +138,30 @@ class ImageGenerator(object):
 
         def forward_step(x_t, prev_state, prev_content,prev_state_2,prev_content_2):
             input_gate = T.nnet.hard_sigmoid(
-                T.dot(Input_D(self.U_input), x_t) + T.dot(D(self.W_input), prev_state))
+                T.dot(x_t,Input_D(self.U_input)) + T.dot(prev_state,D(self.W_input)))
             forget_gate = T.nnet.hard_sigmoid(
-                T.dot(Input_D(self.U_forget), x_t) + T.dot(D(self.W_forget), prev_state))
+                T.dot(x_t,Input_D(self.U_forget)) + T.dot(prev_state,D(self.W_forget)))
             output_gate = T.nnet.hard_sigmoid(
-                T.dot(Input_D(self.U_output), x_t) + T.dot(D(self.W_output), prev_state))
+                T.dot(x_t,Input_D(self.U_output)) + T.dot(prev_state,D(self.W_output)))
 
-            stabilized_input = T.tanh(T.dot(Input_D(self.U), x_t) + T.dot(D(self.W), prev_state))
+            stabilized_input = T.tanh(T.dot(x_t,Input_D(self.U)) + T.dot( prev_state,D(self.W)))
             c = forget_gate * prev_content + input_gate * stabilized_input
             s = output_gate * T.tanh(c)
 
             input_gate2 = T.nnet.hard_sigmoid(
-                T.dot(D(self.U_input_2), s) + T.dot(D(self.W_input_2), prev_state_2))
+                T.dot(s,D(self.U_input_2)) + T.dot(prev_state_2,D(self.W_input_2)))
             forget_gate2 = T.nnet.hard_sigmoid(
-                T.dot(D(self.U_forget_2), s) + T.dot(D(self.W_forget_2), prev_state_2))
+                T.dot(s,D(self.U_forget_2)) + T.dot(prev_state_2,D(self.W_forget_2)))
             output_gate2 = T.nnet.hard_sigmoid(
-                T.dot(D(self.U_output_2), s) + T.dot(D(self.W_output_2), prev_state_2))
+                T.dot(s,D(self.U_output_2)) + T.dot(prev_state_2,D(self.W_output_2)))
 
-            stabilized_input2 = T.tanh(T.dot(D(self.U_2), s) + T.dot(D(self.W_2), prev_state_2))
+            stabilized_input2 = T.tanh(T.dot(s,D(self.U_2)) + T.dot(prev_state_2,D(self.W_2)))
             c2 = forget_gate2 * prev_content_2 + input_gate2 * stabilized_input2
             s2 = output_gate2 * T.tanh(c2)
 
 
 
-            o = T.dot(self.O_w, s2)
+            o = T.dot(s2,self.O_w)
 
             return [o, s, c, s2, c2, input_gate, forget_gate, output_gate]
 
@@ -167,10 +173,10 @@ class ImageGenerator(object):
             forward_step,
             sequences=[X],
             truncate_gradient=-1,
-            outputs_info= [None,dict(initial=T.zeros((X.shape[0],self.hidden_dim), dtype=theano.config.floatX)),
-                               dict(initial=T.zeros((X.shape[0],self.hidden_dim), dtype=theano.config.floatX)),
-                               dict(initial=T.zeros((X.shape[0],self.hidden_dim), dtype=theano.config.floatX)),
-                               dict(initial=T.zeros((X.shape[0],self.hidden_dim), dtype=theano.config.floatX))
+            outputs_info= [None,dict(initial=T.zeros((X.shape[1],self.hidden_dim), dtype=theano.config.floatX)),
+                               dict(initial=T.zeros((X.shape[1],self.hidden_dim), dtype=theano.config.floatX)),
+                               dict(initial=T.zeros((X.shape[1],self.hidden_dim), dtype=theano.config.floatX)),
+                               dict(initial=T.zeros((X.shape[1],self.hidden_dim), dtype=theano.config.floatX))
                                , None, None, None
                                ])
 
@@ -181,13 +187,33 @@ class ImageGenerator(object):
 
 
 
+
         params = self.params #+ self.output_params
-        lambda_L1 = 0.001
+        lambda_L1 = 0.0001
         L1_Loss = lambda_L1 * T.sum([ T.sum(abs(p)) for p in params])
         cost =  T.sum(T.nnet.binary_crossentropy(T.clip(output, 1e-7, 1.0 - 1e-7),Y)) + L1_Loss
 
 
-        updates =  adam(cost,params,learning_rate=0.0001) #apply_momentum(updates_sgd, params, momentum=0.9)
+
+
+        item_reps_in_hidden_space = T.tanh(T.dot(Y,self.ItemEmbedding))
+        dists , updates = theano.scan(lambda item,hidden: T.sqrt(T.sum((item - self.hidden_state[-1]) ** 2, axis=1))
+                                                          - T.sqrt(T.sum((item - hidden) ** 2))
+                                      , sequences=[item_reps_in_hidden_space,self.hidden_state[-1]])
+
+        #dists = T.reshape(dists,(dists.shape[0]*dists.shape[1],1))
+        counts, updates = theano.scan(lambda item: T.ones(1),
+                                     sequences=item_reps_in_hidden_space)
+        #same_dists = T.sqrt(T.sum( ( item_reps_in_hidden_space - self.hidden_state[-1]) ** 2, axis=1))
+        #cost_plus = (T.sum(dists) - T.sum(same_dists)) / (dists.shape[0] - same_dists.shape[0])
+
+
+        cost_plus =  T.sum(T.max([T.zeros_like(dists), 0.1*T.ones_like(dists) - dists],axis=0)) #T.sum(T.max([T.zeros_like(dists),0.0*T.ones_like(dists) - dists + same_dists * T.eye(dists.shape[0])],axis=0))
+        cost += cost_plus
+
+        #self.prob_dists = theano.function([X,Y], [dists,same_dists,cost_plus])
+
+        updates =  adam(cost,params,learning_rate=0.001) #apply_momentum(updates_sgd, params, momentum=0.9)
         self.backprop_update = theano.function([X,Y],[output,cost],updates=updates)
 
         self.predict = theano.function([X,Y], [output, cost])
@@ -203,6 +229,107 @@ class ImageGenerator(object):
         return corrects / len(predictions)
 
 
+class Experiment(object):
+    def __init__(self,id,
+                         relative_test_size,
+                         number_of_concepts=3,
+                         number_of_values_per_concept=3,
+                         number_of_items_per_combination=3,
+                         batch_size=4):
+
+        self.id = id
+        self.relative_test_size = relative_test_size
+        self.number_of_concepts = number_of_concepts
+        self.number_of_values_per_concept = number_of_values_per_concept
+        self.number_of_items_per_combination = number_of_items_per_combination
+        self.label_dim = number_of_concepts * number_of_values_per_concept + 1
+        dg = DataSetGenerator(number_of_concepts, number_of_values_per_concept)
+        dg.generate_data()
+        self.items = list(dg.items)
+        self.labels = list(dg.labels)
+
+        indexes = np.arange(len(self.items))
+        np.random.shuffle(indexes)
+
+        self.items = np.asarray(self.items)[indexes, :]
+        self.labels = np.asarray(self.labels)[indexes]
+
+        total_count = len(self.items)
+        test_count = (total_count // self.relative_test_size)
+
+        self.train_items = np.asarray(self.items[:-test_count])
+        self.test_items = np.asarray(self.items[-test_count:])
+        self.train_labels = np.asarray(self.labels[:-test_count])
+        self.test_labels = np.asarray(self.labels[-test_count:])
+
+        self.batch_size = batch_size
+        self.number_of_training_batch = self.train_items.shape[0] // batch_size
+        if (self.train_items.shape[0] % batch_size > 0):
+            self.number_of_training_batch += 1
+
+        self.number_of_testing_batch = self.test_items.shape[0] // batch_size
+        if (self.test_items.shape[0] % batch_size > 0):
+            self.number_of_testing_batch += 1
+
+
+
+
+def do_the_exp(exp):
+    lstm_listener = ImageGenerator(input_dim = exp.label_dim,
+                                   hidden_dim = 256,
+                                   output_dim = exp.number_of_values_per_concept*exp.number_of_concepts,
+                                   dropout_rate=0.9,
+                                   input_dropout_rate=.0
+                                   , all_items=exp.items)
+
+    lstm_listener.define_network()
+
+    outputs, costs = lstm_listener.predict(np.asarray(exp.test_labels, dtype="float32").transpose(1, 0, 2),
+                                           np.asarray(exp.test_items, dtype="float32")
+                                           )
+
+    number_of_epochs = 500
+    iteration_train_cost = []
+    iteration_test_cost = []
+
+    iteration_test_accuracy = []
+    iteration_train_accuracy = []
+    for e in np.arange(number_of_epochs):
+        train_items_index = np.arange(len(exp.train_labels))
+        np.random.shuffle(train_items_index)
+        train_costs = []
+        train_predictions = []
+        train_targets = []
+        for k in np.arange(exp.number_of_training_batch):
+            current_batch_indexes = train_items_index[
+                                    k * exp.batch_size:min([(k + 1) * exp.batch_size, len(train_items_index)])]
+
+            input_items = exp.train_labels[current_batch_indexes]
+            target_label = exp.train_items[current_batch_indexes]
+            output, cost = lstm_listener.backprop_update(np.asarray(input_items, dtype="float32").transpose(1, 0, 2)
+                                                         , np.asarray(target_label, dtype="float32")
+                                                         )
+            train_costs.append(cost)
+            train_predictions.extend(output)
+            train_targets.extend(target_label)
+
+        test_predictions, test_cost = lstm_listener.predict(np.asarray(exp.test_labels, dtype="float32").transpose(1, 0, 2),
+                                                            np.asarray(exp.test_items, dtype="float32"))
+
+        lstm_listener.test = False
+        test_accuracy = lstm_listener.calculate_accuracy(test_predictions, exp.test_items)
+        train_accuracy = lstm_listener.calculate_accuracy(train_predictions, train_targets)
+        print("train_cost: " + str(np.sum(train_costs)))
+        print("test_cost: " + str(test_cost))
+        print("train accuracy: " + str(train_accuracy))
+        print("test accuracy: " + str(test_accuracy))
+
+        iteration_train_cost.append(np.mean(train_costs))
+        iteration_test_cost.append(test_cost)
+        iteration_test_accuracy.append(test_accuracy)
+        iteration_train_accuracy.append(train_accuracy)
+
+    pickle.dump(exp, open("exp" + str(exp.id), "wb"))
 
 
 if __name__ == '__main__':
@@ -212,98 +339,50 @@ if __name__ == '__main__':
         Dic[VOCAB[i]] = i
     ONE_HOT_VECS = np.eye(len(VOCAB))
 
-    number_of_concepts = 3
-    number_of_values_per_concept = 3
-    number_of_items_per_combination = 3
-    label_dim = number_of_concepts * number_of_values_per_concept + 1
-    dg = DataSetGenerator(number_of_concepts, number_of_values_per_concept)
-    #dg.generate_data_with_marginal_labels(number_of_items_per_label=number_of_items_per_combination, core_item=0)
-    dg.generate_data()
-    items = dg.items
-    labels = dg.labels
+    """"
+    relative_test_sizes = [5, 4, 3, 2]
+    for i in np.arange(len(relative_test_sizes)):
+        exp = Experiment(id=i + 20,
+                         relative_test_size=relative_test_sizes[i],
+                         number_of_concepts=3,
+                         number_of_values_per_concept=3,
+                         number_of_items_per_combination=3)
 
-    total_count = len(items)
-    test_count = (total_count // 5)
+        do_the_exp((exp))
 
-    train_items = items[:-test_count]
-    test_items = items[-test_count:]
-    train_labels = labels[:-test_count]
-    test_labels = labels[-test_count:]
+    """
 
-    lstm_listener = ImageGenerator(input_dim = label_dim,
-                                   hidden_dim = 128,
-                                   output_dim = number_of_values_per_concept*number_of_concepts,
-                                   dropout_rate=0.5,
-                                   input_dropout_rate=.1
-                                   , all_items=items)
+    """relative_test_sizes = [5, 4, 3, 2]
+    for i in np.arange(len(relative_test_sizes)):
+        exp = Experiment(id=i + 200,
+                         relative_test_size=relative_test_sizes[i],
+                         number_of_concepts=3,
+                         number_of_values_per_concept=4,
+                         number_of_items_per_combination=3)
 
-    lstm_listener.define_network()
+        do_the_exp((exp))
+    """
 
-    outputs,costs = lstm_listener.predict(np.asarray(test_labels, dtype="float32"),
-                                          np.asarray(test_labels, dtype="float32")
-                                         )
+    relative_test_sizes = [5, 4, 3, 2]
+    for i in np.arange(len(relative_test_sizes)):
+        exp = Experiment(id=i + 5200,
+                         relative_test_size=relative_test_sizes[i],
+                         number_of_concepts=3,
+                         number_of_values_per_concept=4,
+                         number_of_items_per_combination=3)
+
+        do_the_exp((exp))
 
 
-    import time
-    import random
 
-    start = time.time()
-    number_of_epochs = 3000
-    iteration_train_cost = []
-    iteration_test_cost = []
 
-    iteration_test_accuracy = []
-    iteration_train_accuracy = []
-    for e in np.arange(number_of_epochs):
-        train_items_index = np.arange(len(train_labels))
-        np.random.shuffle(train_items_index)
-        train_costs = []
-        train_predictions = []
-        train_targets = []
-        for k in train_items_index:
-            all_other_index= list(train_items_index[:])
-            all_other_index.remove(k)
-            all_other_index = np.asarray(all_other_index)
 
-            all_other_items = np.asarray(train_items,"float32")[all_other_index,:]
-            input_items = train_labels[k]
-            target_label = train_items[k]
-            output, cost = lstm_listener.backprop_update(np.asarray(input_items,dtype="float32")
-                                                         , np.asarray(target_label,dtype="float32")
-                                                         #, all_other_items
-                                                         )
 
-            train_costs.append(cost)
-            train_predictions.append(output)
-            train_targets.append(np.asarray(target_label,dtype="float32"))
+    #  0.2 0.4 0.8
 
-        test_items_index =  np.arange(len(test_items))
-        test_costs = []
-        predictions = []
-        targets = []
-        for k in test_items_index:
-            input_items = test_labels[k]  # np.concatenate(tuple(shuffled_item),axis=0)
-            # input_items = [np.concatenate((input_items,word),axis=0) for word in labels[k]]
 
-            target_label = test_items[k]
+   # best last: 0.2
 
-            output, cost = lstm_listener.predict(np.asarray(input_items, dtype="float32"),
-                                                 np.asarray(target_label, dtype="float32")
-                                                )
-            predictions.append(output)
-            targets.append(np.asarray(target_label, dtype="float32"))
+   #5200 0.0
 
-            test_costs.append(cost)
 
-        test_accuracy = lstm_listener.calculate_accuracy(predictions,targets)
-        train_accuracy = lstm_listener.calculate_accuracy(train_predictions, train_targets)
-        print("train_cost: " + str(np.mean(train_costs)))
-        print("test_cost: "+str(np.mean(test_costs)))
-        print("train accuracy: " + str(train_accuracy))
-        print("test accuracy: "+str(test_accuracy))
-
-        iteration_train_cost.append(np.mean(train_costs))
-        iteration_train_cost.append(np.mean(test_costs))
-        iteration_test_accuracy = [test_accuracy]
-
-    Plotting.plot_performance(train_costs, test_costs)
