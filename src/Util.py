@@ -21,7 +21,7 @@ class Plotting(object):
     def plot_performance(performances_1,performances_2):
         fig, ax = plt.subplots()
         ax.plot(np.arange(len(performances_1)), performances_1, 'b',np.arange(len(performances_2)), performances_2, 'g')
-        plt.show()
+
 
     @staticmethod
     def plot_embedding(features, classes, labels, title=None):
@@ -59,11 +59,11 @@ class Plotting(object):
         x = np.asarray(vectors)
         # x = preprocessing.normalize(x, norm='l2')
 
-        tsne = manifold.TSNE(n_components=2, init='pca', perplexity=2, n_iter=20000, early_exaggeration=10,
-                             learning_rate=300, method="exact")
+        tsne = manifold.TSNE(n_components=2, init='pca', perplexity=2, n_iter=20000, early_exaggeration=4,
+                             learning_rate=100, method="exact")
         X_tsne = tsne.fit_transform(x)
 
         Plotting.plot_embedding(X_tsne, np.asarray(colors), labels,
                        title)
 
-        plt.show()
+

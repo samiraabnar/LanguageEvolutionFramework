@@ -4,7 +4,7 @@ import numpy as np
 import sys
 import pickle
 
-sys.path.append('../../')
+sys.setrecursionlimit(1000)
 
 from theanolm.network.weightfunctions import *
 from lasagne.updates import adam
@@ -13,7 +13,7 @@ import theano.tensor.shared_randomstreams
 from generate_data import *
 from Util import *
 
-class TalkerLSTM(object):
+class CaptionGenerator(object):
     def __init__(self,
                  image_rep_dim,
                  lstm_input_dim,
@@ -250,6 +250,9 @@ class TalkerLSTM(object):
 
         self.backprop_update = theano.function([H, Y], [self.output,cost], updates=updates+scan_updates)
         self.predict = theano.function([H,Y], [self.output,cost], updates=scan_updates)
+        self.get_last_hidden_state = theano.function([H],[self.hidden_state[-1]],updates=scan_updates)
+        self.describe = theano.function([H], [self.output], updates=scan_updates)
+        self.get_cost = theano.function([H, Y], [cost],updates=scan_updates)
         #backprop_update_with_feedback_negative = theano.function([H, Y], [cost3], updates=feedback_updates_neg)
 
         self.get_image_embedding = theano.function([H],[T.dot(self.ImageEmbedding,H)])
@@ -343,18 +346,26 @@ class Experiment(object):
 
 
     def do(self):
-        talker = TalkerLSTM(image_rep_dim=exp.number_of_concepts * exp.number_of_values_per_concept,
-                            lstm_input_dim=256,  # len(VOCAB),
-                            lstm_hidden_dim=256,
-                            output_dim=exp.label_dim,
-                            learning_rate=0.01,
-                            dropout_rate=0.9,
-                            input_dropout_rate=0.2,
-                            end_of_sentence_label_max=exp.last_index)
+        self.model_params = {}
+        self.model_params["image_rep_dim"] = exp.number_of_concepts * exp.number_of_values_per_concept
+        self.model_params["lstm_input_dim"] = 256
+        self.model_params["lstm_hidden_dim"] = 256
+        self.model_params["output_dim"] = exp.label_dim
+        self.model_params["learning_rate"] = 0.01
+        self.model_params["dropout_rate"] = 0.9
+        self.model_params["input_dropout_rate"] = 0.2
+        self.model_params["end_of_sentence_label_max"] = exp.last_index
+        talker = CaptionGenerator(image_rep_dim= self.model_params["image_rep_dim"],
+                                  lstm_input_dim=self.model_params["lstm_input_dim"],  # len(VOCAB),
+                            lstm_hidden_dim=self.model_params["lstm_hidden_dim"],
+                                  output_dim=self.model_params["output_dim"],
+                                  learning_rate=self.model_params["learning_rate"],
+                                  dropout_rate=self.model_params["dropout_rate"],
+                                  input_dropout_rate=self.model_params["input_dropout_rate"],
+                                  end_of_sentence_label_max=self.model_params["end_of_sentence_label_max"])
 
         talker.define_network()
 
-        self.model = talker
 
         print("Network defined :)")
 
@@ -412,7 +423,34 @@ class Experiment(object):
                                          # np.argmax(exp.labels[:,:,2], axis=1) + 10* np.argmax(exp.train_labels[:,:,1], axis=1)  + 100* np.argmax(exp.train_labels[:,:,0], axis=1)# [word_set.index(word) for word in words]
                                          , labels)
 
+        print("next plot...")
+        output_embeddings = []
+        text_train = []
+        labels = []
+        for k in np.arange(len(exp.train_items)):
+            [embedding] = talker.get_last_hidden_state(np.asarray(exp.train_items[k], dtype="float32"))
+                                            #  np.asarray(exp.train_labels[k], dtype="float32"))
+            output_embeddings.append(embedding)
+            text_train.append(10)
+            labels.append(get_string(exp.train_labels[k], VOCAB, exp.last_index))
+
+        for k in np.arange(len(exp.test_items)):
+            [embedding] = talker.get_last_hidden_state(np.asarray(exp.test_items[k], dtype="float32"))
+                                             # np.asarray(exp.test_labels[k], dtype="float32"))
+            output_embeddings.append(embedding)
+            text_train.append(30)
+            labels.append(get_string(exp.test_labels[k], VOCAB, exp.last_index))
+
+        Plotting.plot_distribution_t_SNE(np.asarray(output_embeddings),
+                                         text_train
+                                         # np.argmax(exp.labels[:,:,2], axis=1) + 10* np.argmax(exp.train_labels[:,:,1], axis=1)  + 100* np.argmax(exp.train_labels[:,:,0], axis=1)# [word_set.index(word) for word in words]
+                                         , labels)
+
+        plt.show()
+
+        pickle.dump(output_embeddings, open("output_embeddings" + str(self.id), "wb"))
         pickle.dump(exp, open("exp_caption_generator_"+str(self.id), "wb"))
+
 
 
 if __name__ == '__main__':
@@ -432,7 +470,7 @@ if __name__ == '__main__':
                          number_of_concepts=3,
                          number_of_values_per_concept=4,
                          number_of_items_per_combination=3,
-                         number_of_epochs=500
+                         number_of_epochs=250
                          )
 
         exp.prepare_data()

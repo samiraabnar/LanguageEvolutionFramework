@@ -28,10 +28,6 @@ class ImageGenerator(object):
         self.all_items = all_items
         self.test = False
 
-    def set_allitems(self,all_items):
-        self.item_tree = cKDTree(all_items)
-        self.all_items = all_items
-
     def init_lstm_weights(self):
         U_input = weightfunctions.random_normal_matrix((self.hidden_dim, self.input_dim),scale=1.0)
 
@@ -196,15 +192,7 @@ class ImageGenerator(object):
         self.backprop_update = theano.function([X,Y],[output,cost],updates=updates)
 
         self.predict = theano.function([X,Y], [output, cost])
-        self.generate_item = theano.function([X], [output])
-        self.get_cost = theano.function([X,Y], [cost])
 
-
-    def retrieve_image(self,label):
-        [reconstructed_item] = self.generate_item(label)
-        dd, ii = self.item_tree.query(reconstructed_item)
-
-        return np.asarray(self.all_items[ii],dtype="float32"), ii
 
     def calculate_accuracy(self,predictions,targets):
         corrects = 0.0
