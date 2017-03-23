@@ -3,6 +3,12 @@ import matplotlib.pyplot as plt
 from matplotlib import offsetbox
 from sklearn import manifold
 
+
+def vector_softmax(x):
+    """Compute softmax values for each sets of scores in x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum()
+
 def get_string(list_of_vec,VOCAB,end_index):
     str = " "
     for i in np.arange(len(list_of_vec)):

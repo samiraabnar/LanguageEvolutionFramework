@@ -118,8 +118,8 @@ class TalkerLSTM(object):
 
     def define_network(self):
 
-        Y = T.matrix('output')
-        H = T.vector('init_state')
+        Y = T.tensor3('output')
+        H = T.matrix('init_state')
 
         self.init_lstm_weights()
 
@@ -159,13 +159,13 @@ class TalkerLSTM(object):
             output_gate2 = T.nnet.hard_sigmoid(
                 T.dot(s, D(self.U_output_2)) + T.dot(prev_state_2, D(self.W_output_2)))
 
-            stabilized_input2 = T.tanh(s, T.dot(D(self.U_2)) + T.dot(prev_state_2, D(self.W_2)))
+            stabilized_input2 = T.tanh(T.dot(s,D(self.U_2)) + T.dot(prev_state_2, D(self.W_2)))
             c2 = forget_gate2 * prev_content_2 + input_gate2 * stabilized_input2
             s2 = output_gate2 * T.tanh(c2)
 
             # sample_sdv_index = self.rng.choice(size=(1,), a=self.output_dim,p=output_sdv)[0]
             viz_o_2 = T.nnet.softmax(T.dot(s2, self.O_w))[0]
-            visible_output_index = self.rng.choice(size=(1,), a=self.output_dim, p=viz_o_2)[0]
+            visible_output_index = self.rng.choice(size=(x_t.shape[0],), a=self.output_dim, p=viz_o_2)[0]
             the_output = T.eye(self.output_dim, dtype=theano.config.floatX)[visible_output_index]
 
             # o = T.dot(self.WordEmbedding,viz_o)
@@ -397,3 +397,14 @@ if __name__ == '__main__':
 
 
         # inputdrop out --> 0  0.2
+
+    """
+     one_hot =  np.eye(self.lstm_input_dim, dtype="float32")
+        orthogonal_inputs = np.asarray([ [one_hot[i]] for i in np.arange(self.lstm_input_dim) ])
+
+
+        dists, updates = theano.scan(lambda output: T.sqrt(T.sum((output - orthogonal_outputs) ** 2, axis=1))
+
+                                     , sequences=[orthogonal_outputs])
+        orthogonal_cost = T.mean(dists)
+    """

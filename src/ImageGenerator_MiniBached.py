@@ -235,7 +235,7 @@ class Experiment(object):
                          number_of_concepts=3,
                          number_of_values_per_concept=3,
                          number_of_items_per_combination=3,
-                         batch_size=4):
+                         batch_size=2):
 
         self.id = id
         self.relative_test_size = relative_test_size
@@ -288,12 +288,12 @@ def do_the_exp(exp):
                                            np.asarray(exp.test_items, dtype="float32")
                                            )
 
-    number_of_epochs = 500
-    iteration_train_cost = []
-    iteration_test_cost = []
+    number_of_epochs = 400
+    exp.iteration_train_cost = []
+    exp.iteration_test_cost = []
 
-    iteration_test_accuracy = []
-    iteration_train_accuracy = []
+    exp.iteration_test_accuracy = []
+    exp.iteration_train_accuracy = []
     for e in np.arange(number_of_epochs):
         train_items_index = np.arange(len(exp.train_labels))
         np.random.shuffle(train_items_index)
@@ -324,12 +324,18 @@ def do_the_exp(exp):
         print("train accuracy: " + str(train_accuracy))
         print("test accuracy: " + str(test_accuracy))
 
-        iteration_train_cost.append(np.mean(train_costs))
-        iteration_test_cost.append(test_cost)
-        iteration_test_accuracy.append(test_accuracy)
-        iteration_train_accuracy.append(train_accuracy)
+        exp.iteration_train_cost.append(np.mean(train_costs))
+        exp.iteration_test_cost.append(test_cost)
+        exp.iteration_test_accuracy.append(test_accuracy)
+        exp.iteration_train_accuracy.append(train_accuracy)
+        #if (test_accuracy == 1):
+        #    break
 
     pickle.dump(exp, open("exp" + str(exp.id), "wb"))
+    Plotting.plot_performance(exp.iteration_train_cost, exp.iteration_test_cost)
+    Plotting.plot_performance(exp.iteration_train_accuracy, exp.iteration_test_accuracy)
+
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -364,8 +370,8 @@ if __name__ == '__main__':
     """
 
     relative_test_sizes = [5, 4, 3, 2]
-    for i in np.arange(len(relative_test_sizes)):
-        exp = Experiment(id=i + 5200,
+    for i in np.arange(3,len(relative_test_sizes)):
+        exp = Experiment(id=i + 8000,
                          relative_test_size=relative_test_sizes[i],
                          number_of_concepts=3,
                          number_of_values_per_concept=4,
@@ -373,9 +379,14 @@ if __name__ == '__main__':
 
         do_the_exp((exp))
 
+    plt.show()
 
+    """exp = pickle.load(open("exp8001", "rb"))
+    Plotting.plot_performance(exp.iteration_train_cost, exp.iteration_test_cost)
+    Plotting.plot_performance(exp.iteration_train_accuracy, exp.iteration_test_accuracy)
 
-
+    plt.show()
+    """
 
 
     #  0.2 0.4 0.8
@@ -384,5 +395,8 @@ if __name__ == '__main__':
    # best last: 0.2
 
    #5200 0.0
+
+   #7000 batch size = 2
+  # 8000 batch size = 2, without breaks
 
 

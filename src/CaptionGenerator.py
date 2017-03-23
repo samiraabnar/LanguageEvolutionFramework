@@ -192,7 +192,7 @@ class CaptionGenerator(object):
             forward_step,
             #sequences=[X],
             truncate_gradient=-1,
-            n_steps= 5,
+            n_steps= 4,
             outputs_info=[dict(initial=T.zeros(self.output_dim, dtype=theano.config.floatX)),
                           dict(initial = T.dot(self.ImageEmbedding,H)), #, T.dot(self.WordEmbedding,T.zeros(self.output_dim))])),
                           dict(initial= T.zeros(self.lstm_hidden_dim, dtype=theano.config.floatX)),
@@ -208,6 +208,7 @@ class CaptionGenerator(object):
         params = self.params
 
         length = T.max([Y.shape[0], self.output.shape[0]])
+
 
 
         padded_cost_output = T.zeros((length, Y.shape[1]))
