@@ -7,7 +7,7 @@ from ImageGenerator import *
 from CaptionGenerator import *
 from Util import *
 
-VOCAB = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M']
+VOCAB = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M','N','O','P','Q','R','S','T,','U','V','W','X','Y','Z']
 Dic = {}
 for i in np.arange(len(VOCAB)):
     Dic[VOCAB[i]] = i
@@ -24,7 +24,7 @@ class SingleItemCommunicationEnv(object):
         self.talker_model_params["image_rep_dim"] = self.exp.number_of_concepts * self.exp.number_of_values_per_concept
         self.talker_model_params["lstm_input_dim"] = 256
         self.talker_model_params["lstm_hidden_dim"] = 256
-        self.talker_model_params["output_dim"] = self.exp.label_dim
+        self.talker_model_params["output_dim"] = exp.label_dim
         self.talker_model_params["learning_rate"] = 0.005
         self.talker_model_params["dropout_rate"] = 0.9
         self.talker_model_params["input_dropout_rate"] = 0.2
@@ -238,10 +238,10 @@ class Experiment(object):
 if __name__ == '__main__':
     relative_test_sizes = [2,3,4,5]
     i = 1
-    exp = Experiment(id=i + 1 + 800,
+    exp = Experiment(id=i + 1 + 9900,
                          relative_test_size=relative_test_sizes[i],
                          number_of_concepts=3,
-                         number_of_values_per_concept=4,
+                         number_of_values_per_concept=5,
                          number_of_items_per_combination=3,
                          number_of_epochs=100
                      )
@@ -254,14 +254,14 @@ if __name__ == '__main__':
     test_listener_costs, test_talker_costs, test_success_rates = [], [], []
     train_listener_costs, train_talker_costs, train_success_rates = [],[],[]
 
-    for turn in np.arange(20):
+    for turn in np.arange(50):
         listener_costs, talker_costs, success_rates = env.game(exp.number_of_epochs)
-        listener_costs, talker_costs, success_rates = np.mean(listener_costs), np.mean(talker_costs), np.sum(success_rates) / len(success_rates)
+        listener_costs, talker_costs, success_rates = np.mean(listener_costs), np.mean(talker_costs), np.mean(success_rates)
         print("train: "+ str(listener_costs), str(talker_costs), str(success_rates))
 
-        train_listener_costs.extend(listener_costs)
-        train_talker_costs.extend(talker_costs)
-        train_success_rates.extend(success_rates)
+        train_listener_costs.append(listener_costs)
+        train_talker_costs.append(talker_costs)
+        train_success_rates.append(success_rates)
 
         listener_costs, talker_costs, success_rates = env.test_play_with_no_feedback()
         print("test: "+ str(listener_costs), str(talker_costs), str(success_rates))
@@ -273,9 +273,9 @@ if __name__ == '__main__':
         env.analyse_vocab()
 
 
-    Plotting.plot_performance(env.listener_costs, env.listener_costs)
-    Plotting.plot_performance(env.talker_costs, env.talker_costs)
-    Plotting.plot_performance(env.success_rates, env.success_rates)
+    Plotting.plot_performance(train_listener_costs, train_listener_costs)
+    Plotting.plot_performance(train_talker_costs, train_talker_costs)
+    Plotting.plot_performance(train_success_rates, train_success_rates)
     Plotting.plot_performance(test_listener_costs, test_listener_costs)
     Plotting.plot_performance(test_talker_costs, test_talker_costs)
     Plotting.plot_performance(test_success_rates, test_success_rates)

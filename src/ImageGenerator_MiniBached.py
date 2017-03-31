@@ -328,8 +328,8 @@ def do_the_exp(exp):
         exp.iteration_test_cost.append(test_cost)
         exp.iteration_test_accuracy.append(test_accuracy)
         exp.iteration_train_accuracy.append(train_accuracy)
-        #if (test_accuracy == 1):
-        #    break
+        if (test_accuracy == 1):
+            break
 
     pickle.dump(exp, open("exp" + str(exp.id), "wb"))
     Plotting.plot_performance(exp.iteration_train_cost, exp.iteration_test_cost)
@@ -369,13 +369,25 @@ if __name__ == '__main__':
         do_the_exp((exp))
     """
 
-    relative_test_sizes = [5, 4, 3, 2]
+    """relative_test_sizes = [5, 4, 3, 2]
     for i in np.arange(3,len(relative_test_sizes)):
         exp = Experiment(id=i + 8000,
                          relative_test_size=relative_test_sizes[i],
                          number_of_concepts=3,
                          number_of_values_per_concept=4,
                          number_of_items_per_combination=3)
+
+        do_the_exp((exp))
+
+    plt.show()"""
+
+    relative_test_sizes = [5, 4, 3, 2]
+    for i in np.arange(3,len(relative_test_sizes)):
+        exp = Experiment(id=i + 404010,
+                         relative_test_size=relative_test_sizes[i],
+                         number_of_concepts=4,
+                         number_of_values_per_concept=10,
+                         number_of_items_per_combination=4)
 
         do_the_exp((exp))
 
