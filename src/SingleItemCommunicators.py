@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from generate_data import *
 from ImageGenerator import *
-from CaptionGenerator import *
+from CaptionGenerator_InputLoop import *
 from Util import *
 
 VOCAB = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M','N','O','P','Q','R','S','T,','U','V','W','X','Y','Z']
@@ -243,7 +243,7 @@ if __name__ == '__main__':
                          number_of_concepts=3,
                          number_of_values_per_concept=5,
                          number_of_items_per_combination=3,
-                         number_of_epochs=100
+                         number_of_epochs=20
                      )
 
     exp.prepare_data()
