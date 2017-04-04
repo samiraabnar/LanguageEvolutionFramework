@@ -129,7 +129,8 @@ class CaptionGenerator(object):
         Y = T.matrix('output')
         H = T.vector('init_state')
 
-        O = T.vector('other_item')
+        HH = T.vector('imagin_state')
+
 
 
         self.init_lstm_weights()
@@ -203,7 +204,21 @@ class CaptionGenerator(object):
                 , None, None, None, None
                           ])
 
-
+        [_, _, _, _, self.imagined_hidden_state, _, _, _,
+         _, _], scan_updates_2 = theano.scan(
+            forward_step,
+            # sequences=[X],
+            truncate_gradient=-1,
+            n_steps=4,
+            outputs_info=[dict(initial=T.zeros(self.output_dim, dtype=theano.config.floatX)),
+                          dict(initial=T.dot(self.ImageEmbedding, HH)),
+                          # , T.dot(self.WordEmbedding,T.zeros(self.output_dim))])),
+                          dict(initial=T.zeros(self.lstm_hidden_dim, dtype=theano.config.floatX)),
+                          dict(initial=T.zeros(self.lstm_hidden_dim, dtype=theano.config.floatX)),
+                          dict(initial=T.zeros(self.lstm_hidden_dim, dtype=theano.config.floatX)),
+                          dict(initial=T.zeros(self.lstm_hidden_dim, dtype=theano.config.floatX))
+                , None, None, None, None
+                          ])
 
 
         params = self.params
@@ -261,7 +276,14 @@ class CaptionGenerator(object):
 
 
 
-        self.backprop_update = theano.function([H, Y], [self.output,cost], updates=updates+scan_updates)
+        t_cosine_items =  T.sum(self.imagined_hidden_state[-1] * self.hidden_state[-1]) / T.sqrt(theano.tensor.sum(self.imagined_hidden_state[-1] ** 2) * theano.tensor.sum(self.hidden_state[-1] ** 2))
+        t_cosine_hiddens = T.sum(H * HH) / T.sqrt(theano.tensor.sum(H ** 2) * theano.tensor.sum(HH ** 2))
+        distance_cost = abs(t_cosine_items - t_cosine_hiddens)
+        d_cost = cost + distance_cost
+        d_updates = adam(d_cost, params, learning_rate=self.learning_rate)
+
+        #self.backprop_update = theano.function([H, Y], [self.output,cost], updates=updates+scan_updates)
+        self.discriminative_backprop_update = theano.function([H,Y,HH],[self.output,d_cost], updates=d_updates + scan_updates + scan_updates_2)
         self.predict = theano.function([H,Y], [self.output,cost], updates=scan_updates)
         self.get_last_hidden_state = theano.function([H],[self.hidden_state[-1]],updates=scan_updates)
         self.describe = theano.function([H], [self.output], updates=scan_updates)
@@ -391,8 +413,12 @@ class Experiment(object):
             np.random.shuffle(train_items_index)
             train_cost_ = 0
             for k in train_items_index:
-                output, cost = talker.backprop_update(np.asarray(exp.train_items[k], dtype="float32"),
-                                                      np.asarray(exp.train_labels[k], dtype="float32"))
+                [imagination_item] = talker.imagin()
+                [imagined_description] = talker.describe(np.asarray(imagination_item, dtype="float32"))
+                output, cost = talker.discriminative_backprop_update(np.asarray(exp.train_items[k], dtype="float32"),
+                                                      np.asarray(exp.train_labels[k], dtype="float32")
+                                                      ,np.asarray(imagination_item, dtype="float32")
+                                                      )
                 # print(str(k)+": "+get_string(train_labels[k],VOCAB,last_index)+" : "+get_string(output,VOCAB,last_index))
                 train_cost_ += cost
 

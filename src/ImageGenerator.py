@@ -15,7 +15,7 @@ class ImageGenerator(object):
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.output_dim = output_dim
-        self.learning_rate = 0.01
+        self.learning_rate = 0.001
         self.dropout_rate = dropout_rate
         self.input_dropout_rate = input_dropout_rate
         self.random_state = np.random.RandomState(23455)

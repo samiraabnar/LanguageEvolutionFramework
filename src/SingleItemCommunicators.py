@@ -73,7 +73,11 @@ class SingleItemCommunicationEnv(object):
 
         update_prob = np.random.uniform(low=0.0, high=1.0, size=(4,))
         if update_prob[0] > 0.5:
-            [talker_output, talker_cost] = self.talker.backprop_update(guessed_item, talker_description)
+            [imagination_item] = self.talker.imagin()
+            [talker_output, talker_cost] = self.talker.discriminative_backprop_update(np.asarray(guessed_item, dtype="float32"),
+                                                                 np.asarray(talker_description, dtype="float32")
+                                                                 , np.asarray(imagination_item, dtype="float32")
+                                                                 )
         if update_prob[1] > 0.5:
             [listener_output, listener_cost] = self.listener.backprop_update(talker_description, item)
         if update_prob[2] > 0.5 and (item != guessed_item).all():
@@ -243,7 +247,7 @@ if __name__ == '__main__':
                          number_of_concepts=3,
                          number_of_values_per_concept=5,
                          number_of_items_per_combination=3,
-                         number_of_epochs=20
+                         number_of_epochs=50
                      )
 
     exp.prepare_data()
@@ -254,7 +258,7 @@ if __name__ == '__main__':
     test_listener_costs, test_talker_costs, test_success_rates = [], [], []
     train_listener_costs, train_talker_costs, train_success_rates = [],[],[]
 
-    for turn in np.arange(50):
+    for turn in np.arange(100):
         listener_costs, talker_costs, success_rates = env.game(exp.number_of_epochs)
         listener_costs, talker_costs, success_rates = np.mean(listener_costs), np.mean(talker_costs), np.mean(success_rates)
         print("train: "+ str(listener_costs), str(talker_costs), str(success_rates))
