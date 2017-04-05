@@ -287,6 +287,7 @@ class CaptionGenerator(object):
         self.predict = theano.function([H,Y], [self.output,cost], updates=scan_updates)
         self.get_last_hidden_state = theano.function([H],[self.hidden_state[-1]],updates=scan_updates)
         self.describe = theano.function([H], [self.output], updates=scan_updates)
+        self.describe = theano.function([H], [self.output], updates=scan_updates)
         self.get_cost = theano.function([H, Y], [cost],updates=scan_updates)
         #backprop_update_with_feedback_negative = theano.function([H, Y], [cost3], updates=feedback_updates_neg)
 
@@ -499,8 +500,8 @@ class Experiment(object):
 
         plt.show()
 
-        pickle.dump(output_embeddings, open("output_embeddings" + str(self.id), "wb"))
-        pickle.dump(exp, open("exp_caption_generator_"+str(self.id), "wb"))
+        #pickle.dump(output_embeddings, open("output_embeddings" + str(self.id), "wb"))
+        #pickle.dump(exp, open("exp_caption_generator_"+str(self.id), "wb"))
 
 
 
