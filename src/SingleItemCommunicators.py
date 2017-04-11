@@ -59,6 +59,8 @@ class SingleItemCommunicationEnv(object):
         self.listener.define_network()
 
     def communication_step(self,item):
+        [imagination_item] = self.talker.imagin()
+        self.talker.only_discriminative_backprop_update(item,imagination_item)
         [talker_description] = self.talker.describe(item)
         guessed_item, guessed_item_index = self.listener.retrieve_image(talker_description)
 
@@ -80,7 +82,7 @@ class SingleItemCommunicationEnv(object):
                                                                  )
         if update_prob[1] > 0.5:
             [listener_output, listener_cost] = self.listener.backprop_update(talker_description, item)
-        if update_prob[2] > 0.5 and (item != guessed_item).all():
+        """if update_prob[2] > 0.5 and (item != guessed_item).all():
 
             number_one_hot = \
                 [np.random.choice(a=self.talker.output_dim, size=(1,),
@@ -88,9 +90,10 @@ class SingleItemCommunicationEnv(object):
             eye = np.eye(self.talker.output_dim, dtype="float32")
             [talker_output, talker_cost] = self.talker.backprop_update(item,
                                                                        np.asarray([eye[n[0]] for n in number_one_hot],dtype="float32") )
-        """if update_prob[3] > 0.5:
-            self.talker.discrimination_update(item,talker_description_for_guessed_item)
         """
+        if update_prob[3] > 0.5:
+            self.talker.only_discriminative_backprop_update(item,guessed_item)
+
     def game(self, number_of_epochs=100, cont=False):
         self.listener.set_allitems(self.exp.train_items)
         listener_costs = []
@@ -258,7 +261,7 @@ if __name__ == '__main__':
     test_listener_costs, test_talker_costs, test_success_rates = [], [], []
     train_listener_costs, train_talker_costs, train_success_rates = [],[],[]
 
-    for turn in np.arange(100):
+    for turn in np.arange(500):
         listener_costs, talker_costs, success_rates = env.game(exp.number_of_epochs)
         listener_costs, talker_costs, success_rates = np.mean(listener_costs), np.mean(talker_costs), np.mean(success_rates)
         print("train: "+ str(listener_costs), str(talker_costs), str(success_rates))
@@ -278,11 +281,17 @@ if __name__ == '__main__':
 
 
     Plotting.plot_performance(train_listener_costs, train_listener_costs)
+    plt.savefig("train_listener_costs.svg")
     Plotting.plot_performance(train_talker_costs, train_talker_costs)
+    plt.savefig("train_talker_costs.svg")
     Plotting.plot_performance(train_success_rates, train_success_rates)
+    plt.savefig("train_success_rates.svg")
     Plotting.plot_performance(test_listener_costs, test_listener_costs)
+    plt.savefig("test_listener_costs.svg")
     Plotting.plot_performance(test_talker_costs, test_talker_costs)
+    plt.savefig("test_talker_costs.svg")
     Plotting.plot_performance(test_success_rates, test_success_rates)
+    plt.savefig("test_success_rates.svg")
 
     output_embeddings = []
     text_train = []
@@ -311,7 +320,7 @@ if __name__ == '__main__':
                                      , labels)
 
 
-    plt.show()
+    plt.savefig("output_embedings.svg")
 
     env.save()
 

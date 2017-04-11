@@ -280,10 +280,15 @@ class CaptionGenerator(object):
         t_cosine_hiddens = T.sum(H * HH) / T.sqrt(theano.tensor.sum(H ** 2) * theano.tensor.sum(HH ** 2))
         distance_cost = abs(t_cosine_items - t_cosine_hiddens)
         d_cost = cost + distance_cost
+        od_cost = inputloop_cost + distance_cost + L1_Loss + L2_Loss
         d_updates = adam(d_cost, params, learning_rate=self.learning_rate)
+        od_updates = adam(od_cost, params, learning_rate=self.learning_rate)
+
 
         #self.backprop_update = theano.function([H, Y], [self.output,cost], updates=updates+scan_updates)
         self.discriminative_backprop_update = theano.function([H,Y,HH],[self.output,d_cost], updates=d_updates + scan_updates + scan_updates_2)
+        self.only_discriminative_backprop_update = theano.function([H,HH],[self.output,od_cost], updates=od_updates + scan_updates + scan_updates_2)
+
         self.predict = theano.function([H,Y], [self.output,cost], updates=scan_updates)
         self.get_last_hidden_state = theano.function([H],[self.hidden_state[-1]],updates=scan_updates)
         self.describe = theano.function([H], [self.output], updates=scan_updates)
