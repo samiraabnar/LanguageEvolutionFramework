@@ -1,5 +1,5 @@
 import numpy as np
-import pickle
+#import pickle
 import matplotlib.pyplot as plt
 
 from generate_data import *
@@ -162,9 +162,9 @@ class SingleItemCommunicationEnv(object):
 
     def save(self):
         print("Saving Env...")
-        pickle.dump(self.exp, open("single_item_communication_exp" + str(self.exp.id), "wb"))
-        pickle.dump(self.talker, open("single_item_communication_talker" + str(self.exp.id), "wb"))
-        pickle.dump(self.listener, open("single_item_communication_listener" + str(self.exp.id), "wb"))
+        #pickle.dump(self.exp, open("single_item_communication_exp" + str(self.exp.id), "wb"))
+        #pickle.dump(self.talker, open("single_item_communication_talker" + str(self.exp.id), "wb"))
+        #pickle.dump(self.listener, open("single_item_communication_listener" + str(self.exp.id), "wb"))
 
     def analyse_vocab(self):
         vocab = {}
