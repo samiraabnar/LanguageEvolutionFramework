@@ -322,11 +322,11 @@ if __name__ == '__main__':
         labels.append(get_string(exp.test_labels[k][:-1], VOCAB, exp.last_index)+"---"+
                       get_string(caption, VOCAB, exp.last_index))
 
-    Plotting.plot_distribution_t_SNE(np.asarray(output_embeddings),
+    """Plotting.plot_distribution_t_SNE(np.asarray(output_embeddings),
                                      text_train
                                      # np.argmax(exp.labels[:,:,2], axis=1) + 10* np.argmax(exp.train_labels[:,:,1], axis=1)  + 100* np.argmax(exp.train_labels[:,:,0], axis=1)# [word_set.index(word) for word in words]
                                      , labels)
-
+    """
 
     #plt.savefig("output_embedings.svg")
     np.save("embeddings",output_embeddings)
