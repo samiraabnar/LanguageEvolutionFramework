@@ -1,5 +1,4 @@
 import numpy as np
-from enum import Enum
 import itertools
 
 class DataMode(object):
