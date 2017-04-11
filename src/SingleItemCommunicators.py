@@ -1,6 +1,6 @@
 import numpy as np
 #import pickle
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 from generate_data import *
 from ImageGenerator import *
@@ -280,7 +280,14 @@ if __name__ == '__main__':
         env.analyse_vocab()
 
 
-    Plotting.plot_performance(train_listener_costs, train_listener_costs)
+    np.save("train_listener_costs",train_listener_costs)
+    np.save("train_talker_costs", train_talker_costs)
+    np.save("train_success_rates", train_success_rates)
+    np.save("test_listener_costs", test_listener_costs)
+    np.save("test_talker_costs", test_talker_costs)
+    np.save("test_success_rates", test_success_rates)
+
+    """Plotting.plot_performance(train_listener_costs, train_listener_costs)
     plt.savefig("train_listener_costs.svg")
     Plotting.plot_performance(train_talker_costs, train_talker_costs)
     plt.savefig("train_talker_costs.svg")
@@ -292,6 +299,7 @@ if __name__ == '__main__':
     plt.savefig("test_talker_costs.svg")
     Plotting.plot_performance(test_success_rates, test_success_rates)
     plt.savefig("test_success_rates.svg")
+    """
 
     output_embeddings = []
     text_train = []
@@ -320,8 +328,9 @@ if __name__ == '__main__':
                                      , labels)
 
 
-    plt.savefig("output_embedings.svg")
-
+    #plt.savefig("output_embedings.svg")
+    np.save("embeddings",output_embeddings)
+    np.save("labels",labels)
     env.save()
 
 
