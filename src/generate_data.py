@@ -2,7 +2,7 @@ import numpy as np
 from enum import Enum
 import itertools
 
-class DataMode(Enum):
+class DataMode(object):
     ONE_HOT = 1
 
 
