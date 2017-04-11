@@ -4,7 +4,6 @@ import numpy as np
 from theanolm.network import weightfunctions
 from lasagne.updates import adam
 from scipy.spatial import *
-import pickle
 
 from generate_data import *
 from Util import *
@@ -331,7 +330,6 @@ def do_the_exp(exp):
         if (test_accuracy == 1):
             break
 
-    pickle.dump(exp, open("exp" + str(exp.id), "wb"))
     Plotting.plot_performance(exp.iteration_train_cost, exp.iteration_test_cost)
     Plotting.plot_performance(exp.iteration_train_accuracy, exp.iteration_test_accuracy)
 

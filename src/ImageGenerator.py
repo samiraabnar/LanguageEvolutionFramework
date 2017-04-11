@@ -8,7 +8,6 @@ from generate_data import *
 from Util import *
 from scipy.spatial import *
 
-import pickle
 
 class ImageGenerator(object):
     def __init__(self, input_dim, hidden_dim, output_dim,dropout_rate,input_dropout_rate,all_items):
@@ -346,7 +345,6 @@ def do_the_exp(exp):
         exp.iteration_test_accuracy.append(test_accuracy)
         exp.iteration_train_accuracy.append(train_accuracy)
 
-    pickle.dump(exp, open("exp"+str(exp.id),"wb"))
 
 if __name__ == '__main__':
     VOCAB = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', '<\s>']
@@ -382,6 +380,5 @@ if __name__ == '__main__':
 
     """
 
-    exp = pickle.load(open("exp4", "rb"))
     Plotting.plot_performance(exp.iteration_train_cost, exp.iteration_test_cost)
     Plotting.plot_performance(exp.iteration_train_accuracy, exp.iteration_test_accuracy)
