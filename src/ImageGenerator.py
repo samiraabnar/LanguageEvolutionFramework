@@ -3,9 +3,12 @@ import theano.tensor as T
 import numpy as np
 from theanolm.network import weightfunctions
 from lasagne.updates import adam
+from lasagne.init import Orthogonal
+
 from generate_data import *
 
 from Util import *
+from Plotting import *
 from scipy.spatial import *
 
 
@@ -32,21 +35,23 @@ class ImageGenerator(object):
         self.all_items = all_items
 
     def init_lstm_weights(self):
-        U_input = weightfunctions.random_normal_matrix((self.hidden_dim, self.input_dim),scale=1.0)
+        o = Orthogonal()
 
-        U_forget = weightfunctions.random_normal_matrix((self.hidden_dim, self.input_dim),scale=1.0)
+        U_input = o.sample(shape=(self.hidden_dim, self.input_dim))
 
-        U_output = weightfunctions.random_normal_matrix((self.hidden_dim, self.input_dim),scale=1.0)
+        U_forget = o.sample(shape=(self.hidden_dim, self.input_dim))
 
-        W_input = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        U_output = o.sample(shape=(self.hidden_dim, self.input_dim))
 
-        W_forget = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        W_input = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        W_output = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        W_forget = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        U = weightfunctions.random_normal_matrix((self.hidden_dim, self.input_dim),scale=1.0)
+        W_output = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        W = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        U = o.sample(shape=(self.hidden_dim, self.input_dim))
+
+        W = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
 
 
@@ -63,21 +68,21 @@ class ImageGenerator(object):
         self.U_forget = theano.shared(value=U_forget, name="U_forget" , borrow="True")
 
 
-        U_input_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        U_input_2 = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        U_forget_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        U_forget_2 = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        U_output_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        U_output_2 = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        W_input_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        W_input_2 = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        W_forget_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        W_forget_2 = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        W_output_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        W_output_2 = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        U_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        U_2 = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        W_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim),scale=1.0)
+        W_2 = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
 
         self.W_2 = theano.shared(value=W_2, name="W_2" , borrow="True")
@@ -96,7 +101,7 @@ class ImageGenerator(object):
 
 
 
-        O_w = weightfunctions.random_normal_matrix((self.output_dim, self.hidden_dim),scale=1.0)
+        O_w = o.sample(shape=(self.output_dim, self.hidden_dim))
 
         self.O_w = theano.shared(value=O_w, name="O_w" , borrow="True")
 
@@ -367,8 +372,8 @@ if __name__ == '__main__':
         do_the_exp((exp))
     """
 
-    """relative_test_sizes = [5, 4, 3, 2]
-    for i in np.arange(len(relative_test_sizes)):
+    relative_test_sizes = [5, 4, 3, 2]
+    for i in np.arange(3,len(relative_test_sizes)):
         exp = Experiment(id=i + 100,
                 relative_test_size=relative_test_sizes[i],
                 number_of_concepts=3,
@@ -378,7 +383,7 @@ if __name__ == '__main__':
         exp.prepare_data()
         do_the_exp((exp))
 
-    """
+
 
     Plotting.plot_performance(exp.iteration_train_cost, exp.iteration_test_cost)
     Plotting.plot_performance(exp.iteration_train_accuracy, exp.iteration_test_accuracy)

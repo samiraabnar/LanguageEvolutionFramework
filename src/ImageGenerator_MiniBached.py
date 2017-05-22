@@ -1,12 +1,14 @@
 import theano
 import theano.tensor as T
 import numpy as np
-from theanolm.network import weightfunctions
 from lasagne.updates import adam
+from lasagne.init import Orthogonal
 from scipy.spatial import *
+from random import *
 
 from generate_data import *
 from Util import *
+from Plotting import *
 
 
 
@@ -16,34 +18,42 @@ class ImageGenerator(object):
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.output_dim = output_dim
-        self.learning_rate = 0.01
+        self.learning_rate = 0.0005
         self.dropout_rate = dropout_rate
         self.input_dropout_rate = input_dropout_rate
-        self.random_state = np.random.RandomState(23455)
+        self.random_state = np.random.RandomState(randint(0,999999))
         self.initial_hiddens = [None,dict(initial=T.zeros(self.hidden_dim, dtype=theano.config.floatX)),
                                      dict(initial=T.zeros(self.hidden_dim, dtype=theano.config.floatX))
                           , None, None, None
                           ]
 
+
+
+        self.item_tree = cKDTree(all_items)
+        self.all_items = all_items
+        self.test = False
+
+    def set_allitems(self,all_items):
         self.item_tree = cKDTree(all_items)
         self.all_items = all_items
 
     def init_lstm_weights(self):
-        U_input = weightfunctions.random_normal_matrix((self.input_dim, self.hidden_dim))
+        o = Orthogonal()
+        U_input = o.sample(shape=(self.input_dim, self.hidden_dim))
 
-        U_forget = weightfunctions.random_normal_matrix((self.input_dim, self.hidden_dim))
+        U_forget = o.sample(shape=(self.input_dim, self.hidden_dim))
 
-        U_output = weightfunctions.random_normal_matrix((self.input_dim, self.hidden_dim))
+        U_output = o.sample(shape=(self.input_dim, self.hidden_dim))
 
-        W_input = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
+        W_input = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        W_forget = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
+        W_forget = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        W_output = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
+        W_output = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        U = weightfunctions.random_normal_matrix((self.input_dim, self.hidden_dim))
+        U = o.sample(shape=(self.input_dim, self.hidden_dim))
 
-        W = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
+        W = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
 
 
@@ -60,21 +70,21 @@ class ImageGenerator(object):
         self.U_forget = theano.shared(value=U_forget, name="U_forget" , borrow="True")
 
 
-        U_input_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
+        U_input_2 = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        U_forget_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
+        U_forget_2 = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        U_output_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
+        U_output_2 = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        W_input_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
+        W_input_2 = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        W_forget_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
+        W_forget_2 = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        W_output_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
+        W_output_2 = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        U_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
+        U_2 = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
-        W_2 = weightfunctions.random_normal_matrix((self.hidden_dim, self.hidden_dim))
+        W_2 = o.sample(shape=(self.hidden_dim, self.hidden_dim))
 
 
         self.W_2 = theano.shared(value=W_2, name="W_2" , borrow="True")
@@ -93,11 +103,11 @@ class ImageGenerator(object):
 
 
 
-        O_w = weightfunctions.random_normal_matrix((self.hidden_dim, self.output_dim))
+        O_w = o.sample(shape=(self.hidden_dim, self.output_dim))
 
         self.O_w = theano.shared(value=O_w, name="O_w" , borrow="True")
 
-        ItemEmbedding = weightfunctions.random_normal_matrix((self.output_dim, self.hidden_dim))
+        ItemEmbedding = o.sample(shape=(self.output_dim, self.hidden_dim))
         self.ItemEmbedding = theano.shared(value=ItemEmbedding, name="ItemEmbedding" , borrow="True")
 
         self.params = [self.U_input, self.U_forget, self.U_output, self.W_input, self.W_forget, self.W_output,
@@ -192,13 +202,24 @@ class ImageGenerator(object):
         L1_Loss = lambda_L1 * T.sum([ T.sum(abs(p)) for p in params])
         cost =  T.sum(T.nnet.binary_crossentropy(T.clip(output, 1e-7, 1.0 - 1e-7),Y)) + L1_Loss
 
-
-
+        """reconstructed_input = T.clip(T.nnet.sigmoid(T.dot(self.I_w, self.hidden_state[-1])), 1e-7, 1.0 - 1e-7)
+        inputloop_cost = T.sum(T.nnet.binary_crossentropy(reconstructed_input, H))
+        cost += inputloop_cost
+        """
 
         item_reps_in_hidden_space = T.tanh(T.dot(Y,self.ItemEmbedding))
-        dists , updates = theano.scan(lambda item,hidden: T.sqrt(T.sum((item - self.hidden_state[-1]) ** 2, axis=1))
-                                                          - T.sqrt(T.sum((item - hidden) ** 2))
+        #dists , updates = theano.scan(lambda item,hidden: T.sqrt(T.sum((item - self.hidden_state[-1]) ** 2, axis=1))
+        #                                                  - T.sqrt(T.sum((item - hidden) ** 2))
+        #                              , sequences=[item_reps_in_hidden_space,self.hidden_state[-1]])
+
+
+        dists , updates2 = theano.scan(lambda item,hidden: (T.sum(item * self.hidden_state[-1], axis=1)) / T.sqrt(T.sum(item ** 2) * T.sum(self.hidden_state[-1] ** 2,axis=1))
+                                                          - T.sum((item * hidden)) / T.sqrt( T.sum(item **2) * T.sum(hidden ** 2))
                                       , sequences=[item_reps_in_hidden_space,self.hidden_state[-1]])
+
+        item_dists , updates3 = theano.scan(lambda item: (T.sum(item * Y, axis=1)) / T.sqrt(T.sum(item ** 2) * T.sum(Y ** 2,axis=1))
+
+                                      , sequences=[Y])
 
         #dists = T.reshape(dists,(dists.shape[0]*dists.shape[1],1))
         counts, updates = theano.scan(lambda item: T.ones(1),
@@ -207,16 +228,28 @@ class ImageGenerator(object):
         #cost_plus = (T.sum(dists) - T.sum(same_dists)) / (dists.shape[0] - same_dists.shape[0])
 
 
-        cost_plus =  T.sum(T.max([T.zeros_like(dists), 0.1*T.ones_like(dists) - dists],axis=0)) #T.sum(T.max([T.zeros_like(dists),0.0*T.ones_like(dists) - dists + same_dists * T.eye(dists.shape[0])],axis=0))
-        cost += cost_plus
+        #cost_plus =  T.sum(T.max([T.zeros_like(dists), 1.0*T.ones_like(dists) - dists],axis=0)) #T.sum(T.max([T.zeros_like(dists),0.0*T.ones_like(dists) - dists + same_dists * T.eye(dists.shape[0])],axis=0))
+        cost_plus_2 = T.sum(abs(dists - item_dists))
+        cost += 0.1*cost_plus_2
 
         #self.prob_dists = theano.function([X,Y], [dists,same_dists,cost_plus])
 
-        updates =  adam(cost,params,learning_rate=0.001) #apply_momentum(updates_sgd, params, momentum=0.9)
+        updates =  adam(cost,params,learning_rate=self.learning_rate) #apply_momentum(updates_sgd, params, momentum=0.9)
         self.backprop_update = theano.function([X,Y],[output,cost],updates=updates)
 
-        self.predict = theano.function([X,Y], [output, cost])
+        self.test_backprop_update = theano.function([X,Y],[output,cost_plus_2],updates=updates)
 
+        self.predict = theano.function([X,Y], [output, cost])
+        self.generate_item = theano.function([X], [output])
+        self.get_cost = theano.function([X, Y], [cost])
+
+
+
+    def retrieve_image(self,label):
+        [reconstructed_item] = self.generate_item(np.asarray([label]))
+        dd, ii = self.item_tree.query(reconstructed_item[0])
+
+        return np.asarray(self.all_items[ii],dtype="float32"), ii
 
     def calculate_accuracy(self,predictions,targets):
         corrects = 0.0
@@ -312,22 +345,52 @@ def do_the_exp(exp):
             train_predictions.extend(output)
             train_targets.extend(target_label)
 
-        test_predictions, test_cost = lstm_listener.predict(np.asarray(exp.test_labels, dtype="float32").transpose(1, 0, 2),
-                                                            np.asarray(exp.test_items, dtype="float32"))
+        #lstm_listener.test_backprop_update(np.asarray(exp.test_labels, dtype="float32").transpose(1, 0, 2),
+        #                                                    np.asarray(exp.test_items, dtype="float32"))
+        lstm_listener.test = True
+        test_accuracies = []
+        test_costs = []
+        for test_label_index_1 in np.arange(len(exp.test_labels)):
+            for test_label_index_2 in  np.arange(len(exp.test_labels)):
+                if (test_label_index_1 != test_label_index_2):
+                    test_labels = [exp.test_labels[test_label_index_1],exp.test_labels[test_label_index_2]]
+                    test_items = [exp.test_items[test_label_index_1],exp.test_items[test_label_index_2]]
+                    test_predictions, test_cost = \
+                        lstm_listener.predict(np.asarray(test_labels, dtype="float32").transpose(1, 0, 2),
+                                                            np.asarray(test_items, dtype="float32"))
 
+                    lstm_listener.set_allitems(test_items)
+                    test_accuracy = lstm_listener.calculate_accuracy(test_predictions, test_items)
+                    test_accuracies.append(test_accuracy)
+                    test_costs.append(test_cost)
         lstm_listener.test = False
-        test_accuracy = lstm_listener.calculate_accuracy(test_predictions, exp.test_items)
-        train_accuracy = lstm_listener.calculate_accuracy(train_predictions, train_targets)
-        print("train_cost: " + str(np.sum(train_costs)))
-        print("test_cost: " + str(test_cost))
-        print("train accuracy: " + str(train_accuracy))
-        print("test accuracy: " + str(test_accuracy))
+
+        train_accuracies = []
+        train_costs = []
+        for train_label_index_1 in np.arange(len(exp.train_labels)):
+            for train_label_index_2 in np.arange(len(exp.train_labels)):
+                if (train_label_index_1 != train_label_index_2):
+                    train_labels = [exp.train_labels[train_label_index_1], exp.train_labels[train_label_index_2]]
+                    train_items = [exp.train_items[train_label_index_1], exp.train_items[train_label_index_2]]
+                    train_predictions, train_cost = \
+                        lstm_listener.predict(np.asarray(train_labels, dtype="float32").transpose(1, 0, 2),
+                                              np.asarray(train_items, dtype="float32"))
+
+                    lstm_listener.set_allitems(train_items)
+                    train_accuracy = lstm_listener.calculate_accuracy(train_predictions, train_items)
+                    train_accuracies.append(train_accuracy)
+                    train_costs.append(train_cost)
+
+        print("train_cost: " + str(np.mean(train_costs)))
+        print("test_cost: " + str(np.mean(test_costs)))
+        print("train accuracy: " + str(np.mean(train_accuracies)))
+        print("test accuracy: " + str(np.mean(test_accuracies)))
 
         exp.iteration_train_cost.append(np.mean(train_costs))
-        exp.iteration_test_cost.append(test_cost)
-        exp.iteration_test_accuracy.append(test_accuracy)
-        exp.iteration_train_accuracy.append(train_accuracy)
-        if (test_accuracy == 1):
+        exp.iteration_test_cost.append(np.mean(test_costs))
+        exp.iteration_test_accuracy.append(np.mean(test_accuracies))
+        exp.iteration_train_accuracy.append(np.mean(train_accuracies))
+        if (np.mean(test_accuracies) == 1 and np.mean(train_accuracies) == 1):
             break
 
     Plotting.plot_performance(exp.iteration_train_cost, exp.iteration_test_cost)
@@ -381,10 +444,10 @@ if __name__ == '__main__':
 
     relative_test_sizes = [5, 4, 3, 2]
     for i in np.arange(3,len(relative_test_sizes)):
-        exp = Experiment(id=i + 404010,
+        exp = Experiment(id=i,
                          relative_test_size=relative_test_sizes[i],
-                         number_of_concepts=4,
-                         number_of_values_per_concept=10,
+                         number_of_concepts=2,
+                         number_of_values_per_concept=3,
                          number_of_items_per_combination=4)
 
         do_the_exp((exp))

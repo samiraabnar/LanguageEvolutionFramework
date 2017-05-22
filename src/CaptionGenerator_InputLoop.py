@@ -20,6 +20,7 @@ class CaptionGenerator(object):
                  lstm_hidden_dim,
                  output_dim,
                  learning_rate,
+                 inner_learning_rate,
                  dropout_rate,
                  input_dropout_rate,
                  end_of_sentence_label_max):
@@ -28,6 +29,7 @@ class CaptionGenerator(object):
         self.lstm_hidden_dim = lstm_hidden_dim
         self.output_dim = output_dim
         self.learning_rate = learning_rate
+        self.inner_learning_rate = inner_learning_rate
         self.init_lstm_weights()
         self.dropout_rate = dropout_rate
         self.input_dropout_rate = input_dropout_rate
@@ -278,13 +280,13 @@ class CaptionGenerator(object):
 
         t_cosine_items =  T.sum(self.imagined_hidden_state[-1] * self.hidden_state[-1]) / T.sqrt(theano.tensor.sum(self.imagined_hidden_state[-1] ** 2) * theano.tensor.sum(self.hidden_state[-1] ** 2))
         t_cosine_hiddens = T.sum(H * HH) / T.sqrt(theano.tensor.sum(H ** 2) * theano.tensor.sum(HH ** 2))
-        distance_cost = abs(t_cosine_items - t_cosine_hiddens)
+        distance_cost = 0.1*abs(t_cosine_items - t_cosine_hiddens)
         d_cost = cost + distance_cost
         od_cost = inputloop_cost + distance_cost + L1_Loss + L2_Loss
         d_updates = adam(d_cost, params, learning_rate=self.learning_rate)
-        od_updates = adam(od_cost, params, learning_rate=self.learning_rate)
+        od_updates = adam(od_cost, params, learning_rate=self.inner_learning_rate)
 
-
+        self.get_cosine = theano.function([H,Y,HH],[t_cosine_items,distance_cost],updates=d_updates + scan_updates + scan_updates_2)
         #self.backprop_update = theano.function([H, Y], [self.output,cost], updates=updates+scan_updates)
         self.discriminative_backprop_update = theano.function([H,Y,HH],[self.output,d_cost], updates=d_updates + scan_updates + scan_updates_2)
         self.only_discriminative_backprop_update = theano.function([H,HH],[self.output,od_cost], updates=od_updates + scan_updates + scan_updates_2)
@@ -395,6 +397,7 @@ class Experiment(object):
         self.model_params["lstm_hidden_dim"] = 256
         self.model_params["output_dim"] = exp.label_dim
         self.model_params["learning_rate"] = 0.01
+        self.model_params["inner_learning_rate"] = 0.001
         self.model_params["dropout_rate"] = 0.9
         self.model_params["input_dropout_rate"] = 0.2
         self.model_params["end_of_sentence_label_max"] = exp.last_index
@@ -403,11 +406,13 @@ class Experiment(object):
                             lstm_hidden_dim=self.model_params["lstm_hidden_dim"],
                                   output_dim=self.model_params["output_dim"],
                                   learning_rate=self.model_params["learning_rate"],
+                                  inner_learning_rate=self.model_params["inner_learning_rate"],
                                   dropout_rate=self.model_params["dropout_rate"],
                                   input_dropout_rate=self.model_params["input_dropout_rate"],
                                   end_of_sentence_label_max=self.model_params["end_of_sentence_label_max"])
 
         talker.define_network()
+
 
 
         print("Network defined :)")
@@ -420,6 +425,15 @@ class Experiment(object):
             train_cost_ = 0
             for k in train_items_index:
                 [imagination_item] = talker.imagin()
+
+                cos, dist = talker.get_cosine(np.asarray(exp.train_items[k], dtype="float32"),
+                                              np.asarray(exp.train_labels[k], dtype="float32")
+                                              , np.asarray(imagination_item, dtype="float32")
+                                              )
+
+
+                print(dist)
+                print(cos)
                 [imagined_description] = talker.describe(np.asarray(imagination_item, dtype="float32"))
                 output, cost = talker.discriminative_backprop_update(np.asarray(exp.train_items[k], dtype="float32"),
                                                       np.asarray(exp.train_labels[k], dtype="float32")

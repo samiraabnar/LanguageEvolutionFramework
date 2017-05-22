@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib import offsetbox
 from sklearn import manifold
+import numpy as np
 
 class Plotting(object):
 

@@ -3,7 +3,7 @@ import numpy as np
 #import matplotlib.pyplot as plt
 
 from generate_data import *
-from ImageGenerator import *
+from ImageGenerator_MiniBached import *
 from CaptionGenerator_InputLoop import *
 from Util import *
 
@@ -25,7 +25,9 @@ class SingleItemCommunicationEnv(object):
         self.talker_model_params["lstm_input_dim"] = 256
         self.talker_model_params["lstm_hidden_dim"] = 256
         self.talker_model_params["output_dim"] = exp.label_dim
-        self.talker_model_params["learning_rate"] = 0.005
+        self.talker_model_params["learning_rate"] = 0.0001
+        self.talker_model_params["inner_learning_rate"] = 0.0000
+        1
         self.talker_model_params["dropout_rate"] = 0.9
         self.talker_model_params["input_dropout_rate"] = 0.2
         self.talker_model_params["end_of_sentence_label_max"] = self.exp.last_index
@@ -37,6 +39,7 @@ class SingleItemCommunicationEnv(object):
                                   lstm_hidden_dim=self.talker_model_params["lstm_hidden_dim"],
                                   output_dim=self.talker_model_params["output_dim"],
                                   learning_rate=self.talker_model_params["learning_rate"],
+                                  inner_learning_rate=self.talker_model_params["inner_learning_rate"],
                                   dropout_rate=self.talker_model_params["dropout_rate"],
                                   input_dropout_rate=self.talker_model_params["input_dropout_rate"],
                                   end_of_sentence_label_max=self.talker_model_params["end_of_sentence_label_max"])
@@ -66,8 +69,8 @@ class SingleItemCommunicationEnv(object):
 
 
         [cost_talker] = self.talker.get_cost(guessed_item,talker_description)
-        [cost_listener] = self.listener.get_cost(talker_description,item)
-
+        [cost_listener] = self.listener.get_cost(np.asarray([talker_description]).transpose(1, 0, 2),np.asarray([item]))
+ 
         return  cost_talker, cost_listener, item, talker_description, guessed_item, guessed_item_index
 
     def update_networks(self, item, talker_description, guessed_item):
@@ -81,7 +84,7 @@ class SingleItemCommunicationEnv(object):
                                                                  , np.asarray(imagination_item, dtype="float32")
                                                                  )
         if update_prob[1] > 0.5:
-            [listener_output, listener_cost] = self.listener.backprop_update(talker_description, item)
+            [listener_output, listener_cost] = self.listener.backprop_update(np.asarray([talker_description], dtype="float32").transpose(1, 0, 2), [item])
         """if update_prob[2] > 0.5 and (item != guessed_item).all():
 
             number_one_hot = \
@@ -250,7 +253,7 @@ if __name__ == '__main__':
                          number_of_concepts=3,
                          number_of_values_per_concept=5,
                          number_of_items_per_combination=3,
-                         number_of_epochs=50
+                         number_of_epochs=100
                      )
 
     exp.prepare_data()
@@ -261,7 +264,7 @@ if __name__ == '__main__':
     test_listener_costs, test_talker_costs, test_success_rates = [], [], []
     train_listener_costs, train_talker_costs, train_success_rates = [],[],[]
 
-    for turn in np.arange(500):
+    for turn in np.arange(50):
         listener_costs, talker_costs, success_rates = env.game(exp.number_of_epochs)
         listener_costs, talker_costs, success_rates = np.mean(listener_costs), np.mean(talker_costs), np.mean(success_rates)
         print("train: "+ str(listener_costs), str(talker_costs), str(success_rates))
