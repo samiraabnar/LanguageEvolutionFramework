@@ -231,11 +231,13 @@ class ImageGenerator(object):
         #cost_plus =  T.sum(T.max([T.zeros_like(dists), 1.0*T.ones_like(dists) - dists],axis=0)) #T.sum(T.max([T.zeros_like(dists),0.0*T.ones_like(dists) - dists + same_dists * T.eye(dists.shape[0])],axis=0))
         cost_plus_2 = T.sum(abs(dists - item_dists))
         cost += 0.1*cost_plus_2
+        item_rep_dist = T.sum(item_dists)
 
         #self.prob_dists = theano.function([X,Y], [dists,same_dists,cost_plus])
 
         updates =  adam(cost,params,learning_rate=self.learning_rate) #apply_momentum(updates_sgd, params, momentum=0.9)
         self.backprop_update = theano.function([X,Y],[output,cost],updates=updates)
+
 
         self.test_backprop_update = theano.function([X,Y],[output,cost_plus_2],updates=updates)
 
@@ -245,8 +247,11 @@ class ImageGenerator(object):
 
 
 
-    def retrieve_image(self,label):
+    def retrieve_image(self,label,item_pool,onlinelearning=False):
+        if onlinelearning == True:
+            self.discriminative_update(item_pool)
         [reconstructed_item] = self.generate_item(np.asarray([label]))
+        self.set_allitems(item_pool)
         dd, ii = self.item_tree.query(reconstructed_item[0])
 
         return np.asarray(self.all_items[ii],dtype="float32"), ii

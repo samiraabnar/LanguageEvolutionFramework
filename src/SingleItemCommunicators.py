@@ -61,11 +61,11 @@ class SingleItemCommunicationEnv(object):
 
         self.listener.define_network()
 
-    def communication_step(self,item):
+    def communication_step(self,item,item_pool,onlinelearning=False):
         [imagination_item] = self.talker.imagin()
         self.talker.only_discriminative_backprop_update(item,imagination_item)
         [talker_description] = self.talker.describe(item)
-        guessed_item, guessed_item_index = self.listener.retrieve_image(talker_description)
+        guessed_item, guessed_item_index = self.listener.retrieve_image(talker_description,item_pool,onlinelearning=onlinelearning)
 
 
         [cost_talker] = self.talker.get_cost(guessed_item,talker_description)
@@ -111,7 +111,10 @@ class SingleItemCommunicationEnv(object):
             talker_costs_epoch = []
             for k in train_items_index:
                 the_item = np.asarray(exp.train_items[k], dtype="float32")
-                cost_talker, cost_listener, item, talker_description, guessed_item, guessed_item_index = self.communication_step(the_item)
+                sample_index = [np.random.randint(k+1,len(exp.train_items)) , np.random.randint(0,k)][np.random.randint(0,2)]
+                item_pool = [the_item,
+                             np.asarray(exp.train_items[sample_index], dtype="float32")]
+                cost_talker, cost_listener, item, talker_description, guessed_item, guessed_item_index = self.communication_step(the_item,item_pool,True)
 
                 """print("costs (talker, listener): " + str(cost_talker)+" "+str(cost_listener))
                 print("real item, predicted_item: "+get_string(exp.train_labels[k],VOCAB=VOCAB,end_index=exp.last_index)+" "+
@@ -123,7 +126,7 @@ class SingleItemCommunicationEnv(object):
 
                 listener_costs_epoch.append(cost_listener)
                 talker_costs_epoch.append(cost_talker)
-                communication_success.append(guessed_item_index == k)
+                communication_success.append(guessed_item_index == 0)
 
             listener_costs.append(np.mean(listener_costs_epoch))
             talker_costs.append(np.mean(talker_costs_epoch))
@@ -144,8 +147,12 @@ class SingleItemCommunicationEnv(object):
             talker_costs_epoch = []
             for k in test_items_index:
                 the_item = np.asarray(exp.test_items[k], dtype="float32")
+                sample_index = [np.random.randint(k + 1, len(exp.test_items)), np.random.randint(0, k)][
+                    np.random.randint(0, 2)]
+                item_pool = [the_item,
+                             np.asarray(exp.test_items[sample_index], dtype="float32")]
                 cost_talker, cost_listener, item, talker_description, guessed_item, guessed_item_index = self.communication_step(
-                    the_item)
+                    the_item,item_pool,False)
 
                 """print("costs (talker, listener): " + str(cost_talker) + " " + str(cost_listener))
                 print("real item, predicted_item: " + get_string(exp.test_labels[k], VOCAB=VOCAB,
@@ -250,8 +257,8 @@ if __name__ == '__main__':
     i = 1
     exp = Experiment(id=i + 1 + 9900,
                          relative_test_size=relative_test_sizes[i],
-                         number_of_concepts=3,
-                         number_of_values_per_concept=5,
+                         number_of_concepts=2,
+                         number_of_values_per_concept=4,
                          number_of_items_per_combination=3,
                          number_of_epochs=100
                      )
